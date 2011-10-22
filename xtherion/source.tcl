@@ -50,18 +50,20 @@ source app.tcl
 source te.tcl
 source te_sdata.tcl
 source te_sdata2.tcl
+source te_import.tcl
 #@XTHERION
 source tools_imgs.tcl
 source me_imgs.tcl
 source me_cmds.tcl
 source me_cmds2.tcl
-source me_util.tcl
+source me_import.tcl
 source me_ss.tcl
 source me.tcl
 source cp_procs.tcl
 source bac.tcl
 source cp.tcl
 source tools.tcl
+source mapcal.tcl
 #@DEBUG
 if {![string equal $xth(gui,platform) windows]} {
   source console.tcl

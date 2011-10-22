@@ -2,7 +2,7 @@
  * @file thtexfonts.cxx
  */
   
-/* Copyright (C) 2003 Martin Budaj
+/* Copyright (C) 2003-2008 Martin Budaj
  * 
  * $Date: $
  * $RCSfile: $
@@ -27,9 +27,12 @@
 
 #include <string>
 #include <list>
+#include <map>
+#include <vector>
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include <cstring>
 #include <cstdio>
@@ -38,6 +41,8 @@
 #include "thtexfonts.h"
 #include "thtexenc.cxx"
 #include "thpdfdbg.h"
+#include "thinit.h"
+#include "thpdfdata.h"
 
 #ifndef NOTHERION
 #include "thbuffer.h"
@@ -48,6 +53,123 @@ using namespace std;
 
 list<fontrecord> FONTS;
 typedef list<int> unistr;
+
+encodings_new::encodings_new () {
+  v_fon.resize(134);
+//  v_fon.resize(127);
+  for (int i = 0; i < 33; i++) {
+    v_fon[i] = 0;
+  }
+  for (int i = 33; i < 127; i++) {  // printable ASCII
+    v_fon[i] = i;
+    m_fon[i] = i;
+  }
+  v_fon[127] = 0xFB00; m_fon[0xFB00] = 127;  // ff
+  v_fon[128] = 0xFB01; m_fon[0xFB01] = 128;  // fi
+  v_fon[129] = 0xFB02; m_fon[0xFB02] = 129;  // fl
+  v_fon[130] = 0xFB03; m_fon[0xFB03] = 130;  // ffi
+  v_fon[131] = 0xFB04; m_fon[0xFB04] = 131;  // ffl
+  v_fon[132] = 0x2013; m_fon[0x2013] = 132;  // en dash
+  v_fon[133] = 0x2014; m_fon[0x2014] = 133;  // em dash
+
+  i_fon = 0;
+  
+  NFSS = 0;
+  t1_convert = 1;
+}
+
+int encodings_new::get_enc_pos (int ch) {
+  if (m_fon.find(ch) == m_fon.end()) {
+    if (i_fon < 33) {
+      v_fon[i_fon] = ch;
+      m_fon[ch] = i_fon;
+      i_fon++;
+    } else {
+      v_fon.push_back(ch);
+      m_fon[ch] = v_fon.size()-1;
+    }
+  }
+//cout << "==FP== " << m_fon[style][ch] << endl;
+  return m_fon[ch];
+};
+
+void encodings_new::write_enc_files() {
+  if (NFSS==0) return;
+
+  thprintf("generating TeX metrics ... ");
+  char fc[10];
+  string style[5] = {"rm", "it", "bf", "ss", "si"};
+  string s;
+
+  ofstream H ("thfonts.map"); // delete previous file, we will append to it below
+  if (!H) therror(("could not write font mapping data for pdfTeX\n"));
+  H.close();
+
+  int fcount = get_enc_count();
+  for (int j = 0; j < fcount; j++) {
+    sprintf(fc,"%02d", j);
+    string fname_enc = string("th_enc")+fc+".enc";
+    
+    ofstream F(fname_enc.c_str());
+    if (!F) therror(("could not write encoding file\n"));
+    F << "% LIGKERN uni002D uni002D =: uni2013 ; uni2013 uni002D =: uni2014 ;" << endl;
+    F << "% LIGKERN uni0066 uni0066 =: uniFB00 ; uni0066 uni006C =: uniFB02 ; uni0066 uni0069 =: uniFB01 ; uniFB00 uni0069 =: uniFB03 ; uniFB00 uni006C =: uniFB04 ;" << endl;
+    F << "/" << fname_enc << "[" << endl;
+    for (int k=0; k < 256; k++) {
+//cout << ccount << "** i:" << i << " j:" << j << " k:" << k << " "  << v_fon[i][k] << endl;
+      if ((v_fon.size() <= ((unsigned) 256*j + k)) || (v_fon[256*j + k] == 0)) 
+        F << "/.notdef" << endl;
+      else
+        F << "/uni" << setw(4) << setfill('0') << hex << noshowbase << uppercase << v_fon[256*j + k] << endl;
+    }
+    F << "] def" << endl;
+    F.close();
+
+    for (int i=0; i<5; i++) {
+      string fname_tfm = "th"+style[i]+fc;  // convention used also in tex2uni
+      
+      // we don't use -fliga to turn ligatures on, beacause between
+      // subsequent runs (metapost, pdftex) the meaning of ligatures 
+      // positioned at the end of the encoding would change
+      // if more characters are present at the second run
+      // -- a few ligatures are initialised in the constructor
+      
+      string type1 = (t1_convert==1) ? " " : " --no-type1 ";
+
+      if (system(("\"" + string(thini.get_path_otftotfm()) + "\" -e " + fname_enc +
+        " -fkern --no-default-ligkern --no-virtual --name " + fname_tfm +
+//        " -fkern --no-default-ligkern --name " + fname_tfm +
+//        type1 + " --warn-missing "+otf_file[i]+" > thotftfm.tmp").c_str()) > 0)
+        type1 + otf_file[i]+" > thotftfm.tmp").c_str()) > 0)
+          therror((("can't generate TFM file from "+otf_file[i]+" (LCDF typetools not installed?)").c_str()));
+      ifstream G ("thotftfm.tmp");
+      if (!G) therror(("could not read font mapping data\n"));
+      while (G) {
+        getline(G,s);
+        if (s.find("<") != string::npos) break;
+      }
+      if (s.substr(s.size()-3,3)=="otf" || s.substr(s.size()-3,3)=="OTF") {
+        s.replace(s.rfind("<"), 1, "<<");  // OTF fonts must be fully embedded
+      }
+      G.close();
+      ofstream H ("thfonts.map", ios::app); 
+      if (!H) therror(("could not write font mapping data for pdfTeX\n"));
+      H << "\\pdfmapline{+" << s << "}" << endl;
+      H.close();
+    }
+  }
+  thprintf("done\n");
+}
+
+int encodings_new::get_enc_count () {
+  return v_fon.size() / 256 + 1;
+}
+
+int encodings_new::get_uni (int f, int ch) {
+  return v_fon[256*f + ch];
+}
+
+encodings_new ENC_NEW;
 
 // returns the index of given encoding (as used in predefined encoding arrays)
 // or -1 if such an encoding is not known
@@ -162,18 +284,55 @@ string replace_all(string s, string f, string r) {
   return s;
 }
 
+// easier to use brute force than to link regex on all platforms :(
+string select_lang(string s, string lang) {
+  size_t i,j;
+  if (s.find("<lang:") != string::npos) {
+    i = s.find("<lang:"+lang+">");
+    if (i != string::npos) {  // precise match
+      i = s.find(">",i);
+      j = s.find("<lang:",i);
+      return s.substr(i+1,(j==string::npos? string::npos : j-i-1));
+    }
+    if (lang.length()==5) {
+      lang = lang.substr(0,2);
+      i = s.find("<lang:"+lang+">");
+      if (i != string::npos) {  // match main language part
+        i = s.find(">",i);
+        j = s.find("<lang:",i);
+        return s.substr(i+1,(j==string::npos? string::npos : j-i-1));
+      }
+    }
+    i = s.find("<lang:"+lang);
+    if (i != string::npos) {  // match any of dialects if no main part is present
+      i = s.find(">",i);
+      j = s.find("<lang:",i);
+      return s.substr(i+1,(j==string::npos? string::npos : j-i-1));
+    }
+    i = s.find("<lang:");  // no match, use everything before first lang as a default
+    return s.substr(0,i);
+  }
+  return s;
+}
+
 // main task is done here
 
-#define SELFONT if (lastenc!=-1) T << "\\thf" << u2str(lastenc+1)
+#define SELFONT if (ENC_NEW.NFSS == 0 && lastenc!=-1) T << "\\thf" << u2str(lastenc+1)
 
 string utf2tex(string str, bool remove_kerning) {
+
+  if (str.empty()) return str;
+
   ostringstream T;
   string tmp;
   int wc;  //wide char
   int lastenc = -1;
   int laststyle = -1;
   int align = 0;
+  bool rtl = false;
   bool is_multiline = false;
+
+//  str = select_lang(str, LAYOUT.langstr);
 
   if (str.find("<center>") != string::npos) align = 1;
   else if (str.find("<centre>") != string::npos) align = 1;
@@ -193,6 +352,8 @@ string utf2tex(string str, bool remove_kerning) {
   str = replace_all(str,"<bf>","\033\5");
   str = replace_all(str,"<ss>","\033\6");
   str = replace_all(str,"<si>","\033\7");
+  str = replace_all(str,"<rtl>","\033\10");
+  str = replace_all(str,"</rtl>","\033\11");
 
   if (is_multiline) {
     T << "\\vbox{\\halign{";
@@ -214,7 +375,9 @@ string utf2tex(string str, bool remove_kerning) {
       wc = *(++I);
       switch (wc) {
         case 1: 
+          if (rtl) T << "\\endR";
           T << "\\cr";
+          if (rtl) T << "\\beginR";
           switch (laststyle) {
             case 1: T << "\\rm"; break;
             case 2: T << "\\it"; break;
@@ -230,9 +393,14 @@ string utf2tex(string str, bool remove_kerning) {
         case 5: T << "\\bf "; laststyle = 3; SELFONT; break;
         case 6: T << "\\ss "; laststyle = 4; SELFONT; break;
         case 7: T << "\\si "; laststyle = 5; SELFONT; break;
+        case 8: T << "\\global\\TeXXeTstate=1\\beginR "; rtl = true; break;
+        case 9: T << "\\endR "; rtl = false; break;
       }
       continue;
     }
+    
+    
+if (ENC_NEW.NFSS==0) {    
     
     if (wc==39) wc = 8217; // apostrophe -> quoteright;
     
@@ -337,7 +505,20 @@ string utf2tex(string str, bool remove_kerning) {
       // This would require to make math fonts scalable with the \size[.] macro
     
       T << ".";
-  }
+
+} else { // NFSS == 1
+      int k = ENC_NEW.get_enc_pos(wc);
+      int f_ind = k / 256;
+      if (f_ind != lastenc) {
+        T << "\\thf" << u2str(f_ind+1);
+        lastenc = f_ind;
+      }
+      T << "\\char" << k % 256 << " " << (remove_kerning ? "{}" : "");
+}  
+
+
+  } // endfor
+  
   
   if (is_multiline) {
     T << "\\cr}}";
@@ -347,16 +528,24 @@ string utf2tex(string str, bool remove_kerning) {
 }
 
 int tex2uni(string font, int ch) {
-  int id = -1;
-  for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
-    if (J->rm == font || J->it == font || J->ss == font || J->si == font || J->bf == font) {
-      id = J->id;
-      break;
-    }
-  assert(id != -1);
-  ch %= 256;
-  if (ch < 0) ch += 256;  // if string is based on signed char
-  return texenc[ch][id];
+  if (ENC_NEW.NFSS==0) {
+    int id = -1;
+    for (list<fontrecord>::iterator J = FONTS.begin(); J != FONTS.end(); J++)
+      if (J->rm == font || J->it == font || J->ss == font || J->si == font || J->bf == font) {
+        id = J->id;
+        break;
+      }
+    assert(id != -1);
+    ch %= 256;
+    if (ch < 0) ch += 256;  // if string is based on signed char
+    return texenc[ch][id];
+  } else {  // NFSS
+    string f_ind = font.substr(4,2);
+    // basic check that we have a number
+    assert(f_ind[0] >= '0' && f_ind[0] <= '9' && f_ind[1] >= '0' && f_ind[1] <= '9');
+    if (ch < 0) ch += 256;  // if string is based on signed char
+    return ENC_NEW.get_uni(atoi(f_ind.c_str()),ch);
+  }
 }
 
 
@@ -379,13 +568,15 @@ const char * utf2tex (const char * s, bool b) {
 // after each size/style change
 
 void print_fonts_setup() {
-  ofstream P("th_enc.tex");
+  ofstream P("th_enc.tex");  // included also in MetaPost
   if(!P) therror(("Can't write file"));
   P << "\\def\\rms{\\rm}" << endl;
   P << "\\def\\its{\\it}" << endl;
   P << "\\def\\bfs{\\bf}" << endl;
   P << "\\def\\sss{\\ss}" << endl;
   P << "\\def\\sis{\\si}" << endl;
+
+if (ENC_NEW.NFSS==0) {
   P << "\\def\\fixaccent#1#2 {{\\setbox0\\hbox{#2}\\ifdim\\ht0=1ex\\accent#1 #2%" << endl;
   P << "  \\else\\ooalign{\\unhbox0\\crcr\\hidewidth\\char#1\\hidewidth}\\fi}}" << endl;
 
@@ -426,6 +617,33 @@ void print_fonts_setup() {
   P << "\\let\\laststyle\\rms" << endl;
   P << "\\size[10]\\ss" << endl;
   P << "\\def\\mainfont{" << firstfont << "}" << endl;
+} else {
+  string styledef[5] = {"rm", "it", "bf", "ss", "si"};
+  P << "\\def\\size[#1]{%" << endl;
+  P << "  \\let\\prevstyle\\laststyle" << endl;
+  P << "  \\baselineskip#1pt" << endl;
+  P << "  \\baselineskip=1.2\\baselineskip" << endl;
+  
+  for (int j=0; j<5; j++) {
+    P << "  \\def\\" << styledef[j] << "{";
+    for (int i = 0; i < ENC_NEW.get_enc_count(); i++) 
+      P << "\\font\\thf" << u2str(i+1) << "=th" << styledef[j] << 
+      setw(2) << setfill('0') << i << " at#1pt";
+    P << "\\let\\laststyle\\" << styledef[j] << "s\\thfa}%" << endl;
+    }
+  P << "  \\prevstyle" << endl;
+  P << "}";
+  P << "\\let\\laststyle\\rms" << endl;
+  P << "\\size[10]\\ss" << endl;
+  P << "\\def\\mainfont{\\thfa}" << endl;
+}  
+
+  P << "\\ifx\\TeXXeTstate\\undefined" << endl;
+  P << "  \\let\\beginR\\relax" << endl;
+  P << "  \\let\\endR\\relax" << endl;
+  P << "  \\def\\TeXXeTstate=#1{\\def\\blbost{}}" << endl; // for using \global\TeXXeTstate 
+  P << "\\fi" << endl;
+  
   P.close();
 }
 

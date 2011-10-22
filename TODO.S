@@ -1,7 +1,32 @@
 HOT LIST:
 
-+ new version numbering major.minor.build
-+ fix label size switch and tex export
++ priradenie farieb mapam
++ priame proj4 retazce do CS
++ calibracia surface v lochu
++ survey selection v loch-u
++ loch entrance/fix/station/label off-screen rendering
++ splayshoty previest na LRUD
++ jazyky parsovat na vystupe - odskusat
++ chybaju meracske body v legende
++ farby patternov odladit
+
++ thbook: units up|down|left|right|dimensions
++ thbook: splay shots using "-" or "." as station name
++ thbook: in therion.ini otf2pfb on|off
++ thbook: in therion.ini pdf-fonts
++ thbook: -filter (on|off)
++ thbook: more join description
++ thbook: flags arch & overhang
++ thbook: export cave-list -surveys (on)|off
++ thbook: symbol-colour
++ thbook: new symbol groups
+
++ include maps with previews
++ loch surface handling
++ add options menu to xtherion
++ support iso date format YYYY-MM-DD
++ add lookup tables to configuration files
++ check label size switch and tex export
 + add grid-range to layout
 + fix bug with default layout size/page-setup etc...
 + KML table export

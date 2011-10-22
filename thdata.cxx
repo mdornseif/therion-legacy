@@ -370,6 +370,8 @@ void thdata::set(thcmd_option_desc cod, char ** args, int argenc, unsigned long 
             case TT_DATALEG_LENGTH:
             case TT_DATALEG_BEARING:
             case TT_DATALEG_GRADIENT:
+            case TT_DATALEG_BACKBEARING:
+            case TT_DATALEG_BACKGRADIENT:
             case TT_DATALEG_NOTES:
             case TT_DATALEG_ASSISTANT:
             case TT_DATALEG_INSTRUMENTS:
@@ -874,6 +876,8 @@ void thdata::set_data_instrument(int nargs, char ** args)
       case TT_DATALEG_LENGTH:
       case TT_DATALEG_BEARING:
       case TT_DATALEG_GRADIENT:
+      case TT_DATALEG_BACKBEARING:
+      case TT_DATALEG_BACKGRADIENT:
       case TT_DATALEG_DEPTH:
       case TT_DATALEG_COUNT:
       case TT_DATALEG_NOTES:
@@ -1569,6 +1573,22 @@ void thdata_parse_dim(const char * src, double & d1, double & d2,
   
 }
 
+void thdata_parse_station_name(thobjectname & ds, thmbuffer * sstore, char * src, thdataobject * psobj) {
+  ds.name = NULL;
+  if (strcmp(src,"-") == 0) {
+    ds.name = "-";
+  } 
+  if (strcmp(src,".") == 0) {
+    ds.name = ".";
+  } 
+  if (ds.name == NULL)
+    thparse_objectname(ds, sstore, src, psobj);
+  else {
+    ds.survey = NULL;
+    ds.psurvey = thdb.get_current_survey();
+  }
+}
+
 
 void thdata::insert_data_leg(int nargs, char ** args)
 {
@@ -1673,18 +1693,18 @@ void thdata::insert_data_leg(int nargs, char ** args)
           thparse_objectname(cdims->station, &(this->db->buff_stations),
             args[carg], this);
         } else {
-          thparse_objectname(this->cd_leg->station, &(this->db->buff_stations),
+          thdata_parse_station_name(this->cd_leg->station, &(this->db->buff_stations),
             args[carg], this);
         }
         break;
         
       case TT_DATALEG_FROM:
-        thparse_objectname(this->cd_leg->from, &(this->db->buff_stations),
+        thdata_parse_station_name(this->cd_leg->from, &(this->db->buff_stations),
           args[carg], this);
         break;
         
       case TT_DATALEG_TO:
-        thparse_objectname(this->cd_leg->to, &(this->db->buff_stations),
+        thdata_parse_station_name(this->cd_leg->to, &(this->db->buff_stations),
           args[carg], this);
         break;
         
@@ -2311,6 +2331,8 @@ void thdata::set_data_station(int nargs, char ** args, int argenc)
           setstflag(TT_DATASFLAG_SPRING, TT_STATIONFLAG_SPRING);
           setstflag(TT_DATASFLAG_DOLINE, TT_STATIONFLAG_DOLINE);
           setstflag(TT_DATASFLAG_DIG, TT_STATIONFLAG_DIG);
+          setstflag(TT_DATASFLAG_OVERHANG, TT_STATIONFLAG_OVERHANG);
+          setstflag(TT_DATASFLAG_ARCH, TT_STATIONFLAG_ARCH);
 
           case TT_DATASFLAG_FIXED:              
             if (notflag)
@@ -2376,7 +2398,7 @@ void thdata::set_data_station(int nargs, char ** args, int argenc)
                 it->attr.erase(attrname);
                 break;
             }
-            if ((ai + 2) == nargs)
+            if ((ai + 1) == nargs)
               ththrow(("too few flags - missing attribute value"));
             ai++;            
             if (strlen(args[ai]) > 0) {

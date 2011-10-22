@@ -60,6 +60,16 @@ lxSetup::lxSetup(lxData * dat)
   this->m_vis_grid = false;
   this->m_vis_centerline_cave = true;
   this->m_vis_centerline_surface = true;
+  this->m_vis_centerline_splay = false;
+  this->m_vis_centerline_duplicate = false;
+  this->m_vis_centerline_entrance = false;
+  this->m_vis_centerline_fix = false;
+  this->m_vis_centerline_station = false;
+
+  this->m_stlabel_altitude = false;
+  this->m_stlabel_comment = false;
+  this->m_stlabel_name = false;
+  this->m_stlabel_survey = false;
 
   this->m_colormd = lxSETUP_COLORMD_ALTITUDE;
   this->m_colormd_app_centerline = true;
@@ -263,4 +273,25 @@ void lxSetup::RotateCameraF(double rot)
 	this->RotateCamera(0.0);
 }
 
+
+
+void lxSetup::SelectSurvey(const char * survey)
+{
+  this->m_survey_selection.insert(std::string(survey));
+}
+
+
+bool lxSetup::IsSurveySelected(const char * survey)
+{
+  if (this->m_survey_selection.size() == 0) return true;
+  std::set<std::string>::iterator it = this->m_survey_selection.find(std::string(survey));
+  if (it != this->m_survey_selection.end()) return true;
+  return false;
+}
+
+
+void lxSetup::ClearSurveySelection()
+{
+  this->m_survey_selection.clear();
+}
 

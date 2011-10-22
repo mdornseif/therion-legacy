@@ -92,7 +92,15 @@ Therion uses following data types:
 * {\it person} = a person's first name and surname separated by whitespace characters.
             Use `|/|' to separate first name and surname if there are 
             more names.
-* {\it string} = a sequence of any characters.
+* {\it string} = a sequence of any characters. 
+    \NEW{5.3}Strings may contain special tag |<lang:XX>| to separate 
+    translations.
+    In multilingual strings only the text between |<lang:XX>|
+    (where |XX| is the language selected in initialization 
+    or configuration file) and the next |<lang:YY>| 
+    tag is displayed on the output. 
+    If no match is found, everything before any occurence of
+    |<lang:ZZ>| tag is displayed.
 * {\it units} = length units supported: 
            meter[s], centimeter[s], inch[es], feet[s], yard[s]
            (also m, cm, in, ft, yd).
@@ -109,11 +117,18 @@ Therion uses following data types:
 
 Therion supports coordinate transformations in geodetic coordinate systems.
 You can specify |cs| option in |centreline|, |surface|, |import| and 
-|layout| and then enter XY data in given system. 
-You can also specify output |cs| 
-in configuration file. If you do not specify any |cs| in your dataset, 
+|layout| objects and then enter XY data in given system. 
+You can also specify output |cs| in configuration file. 
+
+If you do not specify any |cs| in your dataset, 
 it is assumed you are working in |local| coordinate system, and no 
-conversions are done. Following coordinate systems are supported:
+conversions are done. If you specify |cs| anywhere in the data, you have to
+specify it for all location data (|fix|, |origin| in |layout| etc.). 
+
+|cs| applies to all subsequent location data until other |cs| is specified or
+until the end of the current object, whichever comes first.
+
+Following coordinate systems are supported:
 
 \list
 * |UTM1| -- |UTM60| = universal transverse Mercator in northern hemisphere
@@ -136,8 +151,9 @@ conversions are done. Following coordinate systems are supported:
 
 \subchapter Magnetic declination.
 
-Therion contains built-in IGRF Earth geomagnetic field model valid for period 
-1900--2010. It is automatically used if the cave is located in the space using 
+Therion contains built-in IGRF\[See \www{http://www.ngdc.noaa.gov/IAGA/vmod/}] 
+Earth geomagnetic field model valid for period 
+1900--2015\NEW{5.3}. It is automatically used if the cave is located in space using 
 any of supported geodetic coordinate systems and no declination is specified by 
 user. The computed declination is listed in the LOG file for information.
 
@@ -360,8 +376,8 @@ the command may be used anywhere.
   * |team <person> [<roles>]| = a survey team member. The first argument
     is his/her name, the others describe the roles of the person in
     the team (optional---currently not used). The following role keywords are
-    supported: station, length, tape, compass, bearing, clino,
-    gradient, counter, depth, station, position, notes, pictures, pics,
+    supported: station, length, tape, [back]compass, [back]bearing, [back]clino,
+    [back]gradient, counter, depth, station, position, notes, pictures, pics,
     instruments (insts), assistant (dog).
   * |explo-team <person>| = a discovery team member. 
   * |instrument <quantity list> <description>| = description
@@ -406,8 +422,11 @@ the command may be used anywhere.
   * |flags <shot flags>| = set flags for following shots. The supported
     flags are: |surface| (for surface measurements), |duplicate| (for
     duplicated surveys), |splay| (for short side legs that are hidden
-    in extended elevation by default). These are excluded from length 
+    in maps and models by default). These are excluded from length 
     calculations. 
+    
+    All shots having one of the stations named either `|.|' or `|-|' are 
+    |splay| shots by default (see also |data| command).
     
     If flag is set to |approx[imate]|, it is included to total length
     calculations, but also displayed separately in survey statistics.
@@ -419,7 +438,7 @@ the command may be used anywhere.
     and its flags. If |""| is specified as a comment, it is ignored.
     
     Supported flags: |entrance|, |continuation|, |air-draught[:winter/summer]|, 
-    |sink|, |spring|, |doline|, |dig|. Also |not| is allowed before a flag, 
+    |sink|, |spring|, |doline|, |dig|, \NEW{5.3}|arch|, |overhang|. Also |not| is allowed before a flag, 
     to remove previously added flag.
     
     You can also specify custom attributes to the station using |attr| flag
@@ -448,10 +467,19 @@ the command may be used anywhere.
     up/ceiling\[dimension may be specified as a pair |[<from> <to>\char"5D|, 
     meaning the size at the beginning and end of the shot], 
     down/floor, left, right, ignore, ignoreall. 
+    
+    See Survex manual for details.
+    
     For interleaved data both newline and direction keywords
     are supported. If backward and forward compass or clino
     reading are given, the average of them is computed.
-    See Survex manual for details.
+    
+\NEW{5.3}    If one of the shot stations is named either `|.|' or `|-|', the shot has
+    |splay| attribute set. {\it Dot} should be used for shots ending on
+    features inside passage, {\it dash} for shots ending on passage walls, floor
+    or ceiling. Although Therion makes no distinction between them yet, it
+    should be used to improve 3D modeling in the future.
+    
   * |group| 
   * |endgroup| = |group/endgroup| pair enables the user to make 
     temporary changes
@@ -461,6 +489,15 @@ the command may be used anywhere.
     only if there is no scrap referencing given centreline.
   * |vthreshold <number> <units>| = threshold for interpreting LRUD readings
     as left-right-front-back reading perpendicular to the shot.
+    
+    If passeges are horizontal (|inclination < vthreshold|), 
+    LR is perpendicular to the shot and UD is vertical.
+    
+    If passages are more or less vertical (|inclination > vthreshold|), even UD
+    becomes perpendicular to the shot -- otherwise passages would not look very
+    good. In the case of vertical shots, UD is interpreted as north-south
+    dimension from the station to allow tube-like modelling of verticals.
+    
   * |extend <spec> [<station> [<station>]]| =
     control how the centerline is extended. |<spec>| is one of the following
 
@@ -658,7 +695,7 @@ Point is a command for drawing a point map symbol.
     see below for details.], 
     |passage-height|\[Height of the passage; see below for details.], 
     |station-name|\[If no text is specified, the name of the nearest
-      station is used.], 
+      station is used.], \penalty-100
     |date|;
 
     {\it symbolic passage fills:}\[Unlike other point symbols, these are
@@ -752,13 +789,19 @@ Point is a command for drawing a point map symbol.
     
     |<br>| = line break
     
-    |<center>/<centre>|, |<left>|, |<right>| = line alignment for multi-line labels. 
+    |<center>|/|<centre>|, |<left>|, |<right>| = line alignment for multi-line labels. 
     Ignored if there is no |<br>| tag.
     
     |<thsp>| = thin space
     
     |<rm>|, |<it>|, |<bf>|, |<ss>|, |<si>| = font switches
         
+\NEW{5.3}    |<rtl>| and |</rtl>| = marks beginning and end of a right-to-left written
+    text
+    
+\NEW{5.3}|<lang:XX>| = creates multilingual label (see |string| type for
+   detailed description)
+    
   * |value| = value of height, passage-height or altitude label or point
      dimensions
 
@@ -837,11 +880,11 @@ respectively.
      {\it labels:} |label|;
 
      {\it special:} |border|, |arrow|, 
-     |section|\[Line showing cross-section position. 
-       If both control points of a B\'ezier curve are given 
-       then the line is drawn up to the perpendicular projection of 
-       the first control point and from the projection of the section control
-       point. No section curve is allowed.], 
+     |section|\[Line showing cross-section position.\NEW{5.3}\ 
+       If both control points (red dots) of a B\'ezier curve (grey line) are given 
+       then the section line (blue) is drawn up to the perpendicular projection (dotted) of 
+       the first control point and from the projection (dotted) of the section control
+       point. No section curve is displayed.\hfil\break\MPpic{xsect.1}], 
      |survey|\[Survey line is automatically drawn by Therion.], 
      |map-connection|\[Used to indicate connection between maps (in offset,
      or the same points in extended elevation).], |u|\[For user defined line symbols.].
@@ -992,13 +1035,18 @@ You may use invisible border to achieve this inside of the passage.
 
 \description
   Join works in two modes: it joins either two scraps or two or more points 
-  in a map together. When joining scraps, only passage walls are joined.
+  or lines in a map together. 
+  
+  When joining more than two points or lines, use one join command for
+  all of them, not a sequence of join commands for pairs.\[E.g. use 
+  |join a b c|, not |join a b| followed by |join b c|.]
+  
+  When joining scraps, only passage walls are joined.
   It's a good idea to place a scrap join in the passage which is as simple 
   as possible, otherwise you have to specify join for each pair of objects 
-  which should be joined. 
-  
-  If you want some object which is clipped by a scrap boundary to continue
-  to a neighbouring scrap, use |-clip off| option for that object.
+  which should be joined.
+  \[If you want some object which is clipped by a scrap boundary to continue
+  to a neighbouring scrap, use |-clip off| option for that object.]
 \enddescription
 
 \syntax
@@ -1023,8 +1071,8 @@ You may use invisible border to achieve this inside of the passage.
 \options
   * |smooth <on/off>| indicates whether two lines are to be connected 
     smoothly.
-  * |count <N>| (when used with scraps) = Therion will try to find more 
-    connections of given two scraps  
+  * |count <N>| (when used with scraps) = Therion will try to join scraps
+    which connect in |N| locations/passages.
 \endoptions
 
 
@@ -1265,8 +1313,8 @@ format:
 * in {\it shapefile} export they are written directly to the associated 
   dbf file,
 * in maps generated using \MP\ (PDF, SVG) the attributes are written in 
-  the \MP\ source file (in the form |ATTR_<name>|) and can be evaluated and used by user in 
-  symbols definition macros.
+  the \MP\ source file as strings (named like |ATTR_<name>|) and can be 
+  evaluated and used by user in symbols definition macros.
   
   You can test presence of such a variable using |if known ATTR_<name>: ... fi|. 
   
@@ -1351,7 +1399,8 @@ the drawing. Click on the {\it Insert} button in {\it Background images} menu.
 Unfortunately, as a limitation of Tcl/Tk language, only GIF, PNM and PPM 
 (plus PNG and JPEG if you installed tkImg extension) images are supported. 
 Additionally XTherion supports XVI (XTherion vector image) format, which
-displays centreline and LRUD information on the background.
+displays centreline and LRUD information on the background, and PocketTopo 
+data exported in Therion format (see below).
 All opened images are placed in the upper-left corner of 
 the working area. Move them by double clicking and dragging with the right 
 mouse button or through a menu. For better performance on slower computers, 
@@ -1501,6 +1550,36 @@ give them names according to real names in the centreline command), than all
 passage walls followed by all other point symbols, lines and areas. Finally 
 draw cross-sections.
 
+
+
+\subsubchapter Additional tools.
+
+\NEW{5.3}{\bf Help/Calibrate bitmap} produces OziExplorer-compatible MAP file based
+on georeferencig data included in a PDF map\[Calibration information for 
+nine distinct points is present if centreline contains
+station(s) fixed using geodetic coordinate system(s)]. 
+
+If the map in PDF format has been converted to raster using external program,
+convertor uses raster image {\it and} pdf map with the same base name 
+located in the same directory to calculate the calibration data.
+
+If the PDF file is used directly, you have to set DPI and output format 
+before automatic conversion\[|ghostscript| and |convert| should be installed
+on your system. Note, that Windows instalation does not include |ghostscript|] 
+to a raster format.
+
+\NEW{5.3}{\bf PocketTopo data} exported in Therion format\[This is a special text
+format which needs to be imported using XTherion and can not be processed
+by Therion directly.]
+from PocketTopo application can be imported in text editor as well as in map 
+editor ({\it File $\to$ Import $\to$ PocketTopo therion export} and 
+{\it Backgroud Images $\to$ Insert $\to$ PocketTopo therion export}). The
+same file is used for both imports. Importing sketch does not create scrap
+data directly. The drawing is just displayed on the background like scanned
+bitmaps and should be digitized manually.
+
+
+
 \subsubchapter Keyboard and mouse shortcuts in the Map editor.
 {\it General}
 \list
@@ -1619,7 +1698,7 @@ draw cross-sections.
 
 \subchapter Thinking in Therion.
 
-Although everything about Therion input files has been explained, this chapter 
+Although everything (well, almost everything) about Therion input files has been explained, this chapter 
 offers some additional tips and hints.
 
 \subsubchapter How to enter centreline?.

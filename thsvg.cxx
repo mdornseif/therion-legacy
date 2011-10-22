@@ -61,6 +61,7 @@ void base64_encode(const char * fname, ofstream & fout) {
   unsigned char out_buffer[4];
 
   ifstream fin(fname, ios::binary);
+  if (!fin) therror((((string)"Can't read file "+fname+"!\n").c_str()));
 
   do {
       for (int i = 0; i < 3; i++) in_buffer[i] = '\x0';
@@ -90,6 +91,7 @@ void base64_encode(const char * fname, ofstream & fout) {
 
 void find_dimensions(double & MINX,double & MINY,double & MAXX,double & MAXY) {
   double llx = 0, lly = 0, urx = 0, ury = 0;
+  double a,b,w,h;
   MINX=DBL_MAX, MINY=DBL_MAX, MAXX=-DBL_MAX, MAXY=-DBL_MAX;
   for (list<scraprecord>::iterator I = SCRAPLIST.begin(); 
                                   I != SCRAPLIST.end(); I++) {
@@ -131,6 +133,22 @@ void find_dimensions(double & MINX,double & MINY,double & MAXX,double & MAXY) {
       if (I->X3 > urx) urx = I->X3;
       if (I->X4 > ury) ury = I->X4;
     }
+    for (list<surfpictrecord>::iterator I_sk = I->SKETCHLIST.begin();
+                                          I_sk != I->SKETCHLIST.end(); I_sk++) {
+      for (int i = 0; i<=1; i++) {
+        for (int j = 0; j<=1; j++) {
+          w = i * I_sk->width;
+          h = j * I_sk->height;
+          a = I_sk->xx*w + I_sk->xy*h + I_sk->dx;
+          b = I_sk->yx*w + I_sk->yy*h + I_sk->dy;
+          if (a < llx) llx = a;
+          if (b < lly) lly = b;
+          if (a > urx) urx = a;
+          if (b > ury) ury = b;
+        }
+      }
+    };
+
 
     if (llx == DBL_MAX || lly == DBL_MAX || urx == -DBL_MAX || ury == -DBL_MAX) 
       therror(("This can't happen -- no data for a scrap!"));
@@ -339,7 +357,7 @@ void print_surface_bitmaps (ofstream &F) {
 
 
 
-void thsvg(const char * fname, int fmt, legenddata ldata = legenddata::legenddata()) {
+void thsvg(const char * fname, int fmt, legenddata ldata) {
   if (fmt == 0)
     thprintf("making svg map ... ");
   else
@@ -525,6 +543,28 @@ void thsvg(const char * fname, int fmt, legenddata ldata = legenddata::legenddat
         }
 
 //    F << "<use x=\"" << I->G1 << "\" y=\"" << -I->G2 << "\" xlink:href=\"#G_" << I->name << "_" << unique_prefix << "\" />" << endl;
+
+        // sketches
+        F.precision(8);
+        for (list<scraprecord>::iterator K = SCRAPLIST.begin(); 
+                                         K != SCRAPLIST.end(); K++) {
+          for (list<surfpictrecord>::iterator I_sk = K->SKETCHLIST.begin();
+                                              I_sk != K->SKETCHLIST.end(); I_sk++) {
+            F << "<g transform=\"matrix(";
+            F << I_sk->xx << " " << I_sk->yx << " " << -I_sk->xy << " " << -I_sk->yy << " " << 
+                 I_sk->dx << " " << I_sk->dy << ")\">";
+            F << "<image x=\"0\" y=\"" << -I_sk->height << "\" width=\"" << I_sk->width << 
+                 "\" height=\"" << I_sk->height << "\" xlink:href=\"data:image/" << 
+                 I_sk->type << ";base64," << endl;
+            base64_encode(I_sk->filename, F);
+            F << "\" />";
+            F << "</g>" << endl;
+          };
+        }
+        F.precision(3);
+        
+        // end of sketches
+
 
         for (list<scraprecord>::iterator K = SCRAPLIST.begin(); 
                                          K != SCRAPLIST.end(); K++) {

@@ -51,6 +51,10 @@
 #include "thlang.h"
 #include "thversion.h"
 
+#ifdef THMSVC
+#define round(x) floor((x) + 0.5)
+#endif
+
 #ifndef NOTHERION
 #include "thchenc.h"
 #include "thbuffer.h"
@@ -253,6 +257,7 @@ list<sheetrecord>::iterator find_sheet(int x, int y, int z) {
 
 void make_sheets() {
   double llx = 0, lly = 0, urx = 0, ury = 0;
+  double a,b,w,h;
   sheetrecord SHREC;
 
   if (mode == ATLAS) {
@@ -304,6 +309,21 @@ void make_sheets() {
       if (I->X3 > urx) urx = I->X3;
       if (I->X4 > ury) ury = I->X4;
     }
+    for (list<surfpictrecord>::iterator I_sk = I->SKETCHLIST.begin();
+                                          I_sk != I->SKETCHLIST.end(); I_sk++) {
+      for (int i = 0; i<=1; i++) {
+        for (int j = 0; j<=1; j++) {
+          w = i * I_sk->width;
+          h = j * I_sk->height;
+          a = I_sk->xx*w + I_sk->xy*h + I_sk->dx;
+          b = I_sk->yx*w + I_sk->yy*h + I_sk->dy;
+          if (a < llx) llx = a;
+          if (b < lly) lly = b;
+          if (a > urx) urx = a;
+          if (b > ury) ury = b;
+        }
+      }
+    };
 
     if (llx == DBL_MAX || lly == DBL_MAX || urx == -DBL_MAX || ury == -DBL_MAX) 
       therror(("This can't happen -- no data for a scrap!"));
@@ -488,6 +508,7 @@ set<int> find_excluded_pages(string s) {
 //  istrstream S(s.c_str());
   istringstream S(s);
   
+  c = ',';
   while (S >> i) {
     S >> c;
     if (c == ',') excl.insert(i);
@@ -1092,6 +1113,21 @@ void print_map(int layer, ofstream& PAGEDEF,
         PAGEDEF << "\\PL{Q}%" << endl;            // end of white color for filled bg
       }
     }
+    
+    // sketches
+    PAGEDEF.precision(6);
+    for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
+      for (list<surfpictrecord>::iterator I_sk = K->SKETCHLIST.begin();
+                                          I_sk != K->SKETCHLIST.end(); I_sk++) {
+        PAGEDEF << "\\pdfximage{" << (string) I_sk->filename << "}%" << endl;
+        PAGEDEF << "\\bitmap{" <<
+            I_sk->xx << "}{" << I_sk->yx << "}{" << I_sk->xy << "}{" << I_sk->yy << "}{" << 
+            I_sk->dx - HSHIFT << "}{" << I_sk->dy - VSHIFT  << 
+            "}{\\pdflastximage}%" << endl;
+      };
+    }
+    PAGEDEF.precision(2);
+    // end of sketches
 
     for (list<scraprecord>::iterator K = SCRAPLIST.begin(); K != SCRAPLIST.end(); K++) {
       if (used_scraps.count(K->name) > 0 && K->G != "") {
@@ -1356,6 +1392,13 @@ void build_pages() {
   PDFRES << "\\pdfinfo{/Creator (Therion " << THVERSION << ", MetaPost, TeX)}%" << endl;
   PDFRES << "\\pdfcatalog{ /ViewerPreferences << /DisplayDocTitle true /PrintScaling /None >> }" << endl;
   
+  if(ENC_NEW.NFSS != 0) PDFRES << "\\input thfonts.map" << endl;
+
+  PDFRES << "\\ifnum\\pdftexversion>139" << endl;
+  PDFRES << "  \\newread\\testin" << endl;
+  PDFRES << "  \\openin\\testin=glyphtounicode.tex" << endl;
+  PDFRES << "  \\ifeof\\testin\\message{No glyph to unicode mapping found!}\\else\\closein\\testin\\input glyphtounicode.tex\\pdfgentounicode=1\\fi" << endl;
+  PDFRES << "\\fi" << endl;
 
   if (LAYOUT.transparency) {
     PDFRES << "\\opacity{" << LAYOUT.opacity << "}%" << endl;
@@ -1598,6 +1641,19 @@ void build_pages() {
       "\\advance\\adjustedVS by \\overlap" << 
       "\\advance\\adjustedVS by \\overlap" << endl;
 
+    //calibration
+    PAGEDEF.precision(10);
+    for (int i=0; i<9; i++) {
+      PAGEDEF << "\\calibrX{" << LAYOUT.calibration_local[i].x - MINX << "bp}\\tmpdimenX=\\tmpdimen" << endl;
+      PAGEDEF << "\\calibrY{" << LAYOUT.calibration_local[i].y - MINY << "bp}\\tmpdimenY=\\tmpdimen" << endl;
+    
+      PAGEDEF << "\\pdfcatalog { /thCalibrate" << i << 
+                 " (X=\\the\\tmpdimenX, Y=\\the\\tmpdimenY, L=" << LAYOUT.calibration_latlong[i].x << 
+                 ", F=" << LAYOUT.calibration_latlong[i].y << ")}" << endl;
+    }
+    PAGEDEF << "\\pdfcatalog { /thCalibrate (HS=\\the\\adjustedHS, VS=\\the\\adjustedVS, HD=" << LAYOUT.calibration_hdist << ")}";
+    PAGEDEF.precision(2);
+
     PAGEDEF << "\\tmpdimen=\\extraW\\advance\\tmpdimen by \\overlap" << endl;
     PAGEDEF << "\\dimtobp{\\tmpdimen}\\edef\\adjustedX{\\tmpdef}%" << endl;
     PAGEDEF << "\\tmpdimen=\\extraS\\advance\\tmpdimen by \\overlap" << endl;
@@ -1669,10 +1725,10 @@ void build_pages() {
         PAGEDEF << "\\PL{" << i << " 0 m " << i << " " << VS << " l S}%" << endl;
 	if (i<HS) {
           PAGEDEF << "\\PL{q 1 0 0 1 " << i+LAYOUT.hsize/2 << 
-	    " 0 cm}\\gridcoord{8}{\\size[24]" << grid_name(LAYOUT.labelx,(MINX+i)/LAYOUT.hsize) << 
+	    " 0 cm}\\gridcoord{8}{\\size[24]" << grid_name(LAYOUT.labelx,round((MINX+i)/LAYOUT.hsize)) << 
 	    "}\\PL{Q}%" << endl;
           PAGEDEF << "\\PL{q 1 0 0 1 " << i+LAYOUT.hsize/2 << " " << VS <<
-	    " cm}\\gridcoord{2}{\\size[24]" << grid_name(LAYOUT.labelx,(MINX+i)/LAYOUT.hsize) << 
+	    " cm}\\gridcoord{2}{\\size[24]" << grid_name(LAYOUT.labelx,round((MINX+i)/LAYOUT.hsize)) << 
 	    "}\\PL{Q}%" << endl;
 	}
       }
@@ -1680,10 +1736,10 @@ void build_pages() {
         PAGEDEF << "\\PL{0 " << i << " m " << HS << " " << i << " l S}%" << endl;
 	if (i<VS) {
           PAGEDEF << "\\PL{q 1 0 0 1 0 " << i+LAYOUT.vsize/2 << 
-    	    " cm}\\gridcoord{6}{\\size[24]" << grid_name(LAYOUT.labely,(MINY+VS-i)/LAYOUT.vsize) << 
+    	    " cm}\\gridcoord{6}{\\size[24]" << grid_name(LAYOUT.labely,round((MINY+VS-i)/LAYOUT.vsize)-1) << 
 	    "}\\PL{Q}%" << endl;
           PAGEDEF << "\\PL{q 1 0 0 1 " << HS << " " << i+LAYOUT.vsize/2 << 
-	    " cm}\\gridcoord{4}{\\size[24]" << grid_name(LAYOUT.labely,(MINY+VS-i)/LAYOUT.vsize) << 
+	    " cm}\\gridcoord{4}{\\size[24]" << grid_name(LAYOUT.labely,round((MINY+VS-i)/LAYOUT.vsize)-1) << 
 	    "}\\PL{Q}%" << endl;
 	}
       }

@@ -39,7 +39,7 @@
 
 
 tracingstats:=1;
-prologues:=1;
+prologues:=0;
 
 if known Background: background:=Background fi;
 %TrueScale:=Scale;
@@ -83,8 +83,8 @@ def pop_label_fill_color =
   label_fill_color := label_fill_color_tmp;
 enddef;
 def process_filledlabel(expr cent, rot) =
-  begingroup
-    bboxmargin:=2.0bp;
+  begingroup;
+    interim bboxmargin:=2.0bp;
     q:=((bbox lab) smoothed 2) rotatedaround (cent, rot);
     fill q withcolor label_fill_color;
     draw lab rotatedaround (cent, rot);
@@ -324,8 +324,8 @@ enddef;
 
 
 def process_label (expr cent, rot) =
-  begingroup
-    bboxmargin:=0.8bp;
+  begingroup;
+    interim bboxmargin:=0.8bp;
     q:=((bbox lab) smoothed 2) rotatedaround (cent, rot);
     draw lab rotatedaround (cent, rot);
     write_circ_bbox(q);  % without corners smoothing it was enough to use
@@ -339,7 +339,10 @@ enddef;
 % draws a label into semicircular box and writes clipping path to a file
 
 def process_uplabel =
+  begingroup;
+    interim bboxmargin := 0.8 bp;
     q:=bbox lab;
+  endgroup;
     alef:=.8-.02*(xpart lrcorner q - xpart llcorner q);
 %    show alef;
     q:=alef[llcorner q,ulcorner q]{up} .. {down}alef[lrcorner q, urcorner q] --
@@ -357,7 +360,10 @@ enddef;
 % clipping path to a file
 
 def process_downlabel =
+  begingroup;
+    interim bboxmargin := 0.8 bp;
     q:=bbox lab;
+  endgroup;
     alef:=1-(.8-.02*(xpart lrcorner q - xpart llcorner q));
     q:=alef[llcorner q,ulcorner q]{down} .. 
         {up}alef[lrcorner q, urcorner q] --
@@ -374,7 +380,10 @@ enddef;
 % writes clipping path to a file
 
 def process_updownlabel =
+  begingroup;
+    interim bboxmargin := 0.8 bp;
     p:=bbox lab;
+  endgroup;
     leftside:=xpart llcorner p;
     rightside:=xpart lrcorner p;
     draw (xpart llcorner p,.5[ypart llcorner p,ypart ulcorner p]) -- 
@@ -435,7 +444,10 @@ enddef;
 % clipping path to a file
 
 def process_circledlabel =
+  begingroup;
+    interim bboxmargin := 0.4 bp;
     q:=bbox lab;
+  endgroup;
     q:=point 0 of q .. point 1 of q .. point 2 of q .. point 3 of q .. cycle;
     draw lab;
     draw q;
@@ -523,7 +535,13 @@ thdrawoptions();
 
 def thdraw expr p = 
   if not fill_only:
-    addto currentpicture doublepath (p transformed T) withpen currentpen _thop_ _op_
+    addto currentpicture 
+    if picture p: 
+      also (p transformed T)
+    else:
+      doublepath (p transformed T) withpen currentpen 
+    fi  
+    _thop_  _op_
   else:
     addto currentpicture also nullpicture
   fi
@@ -758,6 +776,27 @@ enddef;
 
 %%%
 
+% comment out groups in order to use 'save ATTR_*' appropriately
+
+def beginfig(expr c) =
+%  begingroup
+  charcode:=c;
+  clearxy; clearit; clearpen;
+  pickup defaultpen;
+  drawoptions();
+  scantokens extra_beginfig;
+  
+  save smartll, smartur; 
+  pair smartll[], smartur[]; 
+  smart_count := 0;
+enddef;
+
+def endfig =
+  scantokens extra_endfig;
+  shipit;
+%  endgroup
+enddef;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % P. Bolek's MPATTERN package adapted and simplified for Therion
@@ -838,9 +877,26 @@ def endpattern=
   scantokens(Pname_ & "=Pnum_;");
 enddef;
 
+picture pattpict;
+color patterncolor_;
+patterncolor_ := black;
+
 primarydef p withpattern s=
   if known s:
-    p withcolor (epsilon, 10*epsilon, s*epsilon);
+
+    hide(pattpict := image(draw (0,0)--(10,10));
+      for i within pattpict:
+        patterncolor_ := (redpart i, greenpart i, bluepart i);
+      endfor;)
+
+    p withcolor (epsilon, 10*epsilon, s*epsilon)
+    if known mpversion:
+      if scantokens(mpversion)>=1.000: 
+        withprescript(decimal redpart   patterncolor_ & " " &
+                      decimal greenpart patterncolor_ & " " &
+                      decimal bluepart  patterncolor_ & " THsetpatterncolor")
+      fi;
+    fi;
   else:
     p withcolor (1,0,0);
     message("Warning: undefined pattern ignored");

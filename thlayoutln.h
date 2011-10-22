@@ -30,6 +30,7 @@
 #define thlayoutln_h
 
 #include <list>
+#include "thlayoutclr.h"
 
 /**
  * Layout line class.
@@ -44,6 +45,8 @@ class thlayoutln {
   thlayoutln * next_line;
     
   const char * line;
+
+  thlayout_color sclr; ///< Symbol color.
   
   int smid;  ///< Symbol macro ID
 

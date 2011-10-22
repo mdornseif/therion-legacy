@@ -29,6 +29,7 @@
 #include "thparse.h"
 #include "thlangdata.cxx"
 #include "thinit.h"
+#include "thconfig.h"
 #include "thdatabase.h"
 #include "thexception.h"
 #include <map>
@@ -67,7 +68,8 @@ int thlang_parse(char * str) {
 }
 
 const char * thlang_getid(int id) {
-  return thmatch_string(id, thtt_lang);
+  const char * rv = thmatch_string(thlang_getlang(id), thtt_lang);
+  return rv;
 }
 
 const char * thlang_getcxxid(int id) {
@@ -130,6 +132,8 @@ const char * thT(const char * txt, int lng) {
 }
 
 int thlang_getlang(int lng) {
+  if (lng == THLANG_UNKNOWN)
+    lng = thcfg.lang;
   if (lng == THLANG_UNKNOWN)
     lng = thini.lang;
   if (lng == THLANG_UNKNOWN)

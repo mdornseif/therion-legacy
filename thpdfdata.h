@@ -33,6 +33,12 @@
 
 using namespace std;
 
+struct surfpictrecord {
+  const char * filename, * type;
+  double dx, dy, xx, xy, yx, yy, width, height;
+};
+
+
 struct scraprecord {
   string name,F,B,I,E,X,G,C,P;      // name + files
   converted_data Fc, Bc, Ic, Ec, Xc, Gc;
@@ -46,6 +52,7 @@ struct scraprecord {
         X1,X2,X3,X4;
         
   double r,g,b;
+  list<surfpictrecord> SKETCHLIST;
   scraprecord();
 };
 
@@ -84,7 +91,7 @@ paired rotatedaround(paired x,paired o, double th);
 struct layout {
   string excl_list,labelx,labely,
          doc_author,doc_keywords,doc_subject,doc_title,doc_comment,
-         northarrow, scalebar;
+         northarrow, scalebar,langstr;
   bool  excl_pages,title_pages,page_numbering,
         transparency,map_grid,OCG,map_header_bg,colored_text; 
   double hsize,vsize,overlap,
@@ -104,6 +111,8 @@ struct layout {
          gridCA, gridCB, gridCC;
   paired gridcell[9];
   double surface_opacity;
+  paired calibration_local[9], calibration_latlong[9];
+  double calibration_hdist;
   
   layout();
 };
@@ -118,11 +127,6 @@ extern list<pattern> PATTERNLIST;
 extern list<converted_data> GRIDLIST;
 extern converted_data NArrow, ScBar;
 
-
-struct surfpictrecord {
-  const char * filename, * type;
-  double dx, dy, xx, xy, yx, yy, width, height;
-};
 
 
 extern list<surfpictrecord> SURFPICTLIST;

@@ -49,6 +49,8 @@ thexptable::thexptable() {
   this->encoding = TT_UTF_8;
   this->expattr = true;
   this->exploc = false;
+  this->filter = true;
+  this->surveys = true;
 }
 
 
@@ -78,6 +80,26 @@ void thexptable::parse_options(int & argx, int nargs, char ** args)
       this->exploc = (sv == TT_TRUE);
       argx++;
       break;
+    case TT_EXPTABLE_OPT_FILTER:
+      argx++;
+      if (argx >= nargs)
+        ththrow(("missing filter switch -- \"%s\"",args[optx]))
+      sv = thmatch_token(args[argx], thtt_bool);
+      if (sv == TT_UNKNOWN_BOOL)
+        ththrow(("invalid filter switch -- \"%s\"", args[argx]))
+      this->filter = (sv == TT_TRUE);
+      argx++;
+      break;
+    case TT_EXPTABLE_OPT_SURVEYS:
+      argx++;
+      if (argx >= nargs)
+        ththrow(("missing surveys switch -- \"%s\"",args[optx]))
+      sv = thmatch_token(args[argx], thtt_bool);
+      if (sv == TT_UNKNOWN_BOOL)
+        ththrow(("invalid surveys switch -- \"%s\"", args[argx]))
+      this->surveys = (sv == TT_TRUE);
+      argx++;
+      break;    
     case TT_EXPTABLE_OPT_FORMAT:  
       argx++;
       if (argx >= nargs)
@@ -125,15 +147,17 @@ void thexptable::export_survey_entraces(thsurvey * survey)
   thdataobject * obj;
   thdb1ds * st;
   double tmpd;
+  bool is_cave = (survey->entrance.id != 0);
   if (!survey->is_selected()) return;
   if (survey->stat.num_entrances == 0) return;
   // insert survey attributes
-  if (survey->level > 1) {
+  if ((survey->level > 1) && (this->surveys || is_cave))  {
     this->m_table.insert_object(NULL);          
-    this->m_table.get_object()->m_tree_level = (size_t)(survey->level - 2);
-    this->m_table.get_object()->m_tree_node_id = survey->get_reverse_full_name();
-    this->m_table.insert_attribute("Title", ((strlen(survey->title) > 0) ? survey->title : survey->name));
+    this->m_table.get_object()->m_tree_level = (this->surveys ? (size_t)(survey->level - 2) : 0);
+    this->m_table.get_object()->m_tree_node_id = (this->surveys ? survey->get_reverse_full_name() : "");
+    this->m_table.insert_attribute("Title", ths2txt((strlen(survey->title) > 0) ? survey->title : survey->name).c_str());
     this->m_table.insert_attribute("Length",(long)(survey->stat.length + 0.5));
+    if (!is_cave) this->m_table.get_attribute()->set_flag(THATTRFLAG_HIDDEN, true);
     if (survey->stat.station_top != NULL) {
       tmpd = survey->stat.station_top->z - survey->stat.station_bottom->z;
       if (tmpd > survey->stat.length) tmpd = survey->stat.length;
@@ -143,11 +167,12 @@ void thexptable::export_survey_entraces(thsurvey * survey)
     }
     if (survey->stat.length_explored > 0.0) {
       this->m_table.insert_attribute("Explored", (long)(survey->stat.length_explored + 0.5));
+      if (!is_cave) this->m_table.get_attribute()->set_flag(THATTRFLAG_HIDDEN, true);
     } else {
       this->m_table.insert_attribute("Explored", "");
     }
     if (exploc) {
-      if ((survey->stat.num_entrances == 1) && (survey->entrance.id > 0)) {
+      if (((survey->stat.num_entrances == 1) || (!this->surveys)) && (survey->entrance.id > 0)) {
         st = &(this->db->db1d.station_vec[survey->entrance.id - 1]);    
         this->m_table.insert_attribute("X",st->x);
         this->m_table.insert_attribute("Y",st->y);
@@ -156,7 +181,8 @@ void thexptable::export_survey_entraces(thsurvey * survey)
         this->m_table.insert_attribute("Y","");
       }
     }
-    if (((survey->stat.num_entrances > 0) && (!exploc)) && (survey->entrance.id > 0)) {
+
+    if (((survey->stat.num_entrances > 0) && ((!exploc) || (survey->stat.num_entrances == 1) || (!this->surveys))) && (survey->entrance.id > 0)) {
       st = &(this->db->db1d.station_vec[survey->entrance.id - 1]);    
       this->m_table.insert_attribute("Altitude",st->z);
     } else {
@@ -165,7 +191,7 @@ void thexptable::export_survey_entraces(thsurvey * survey)
     if (this->expattr) this->m_table.copy_attributes(this->db->attr.get_object(survey->id));
   }
 
-  if (survey->entrance.id == 0) {
+  if (!is_cave) {
     for(obj = survey->foptr; obj != NULL; obj = obj->nsptr) {
       if (obj->get_class_id() == TT_SURVEY_CMD) {
         this->export_survey_entraces((thsurvey *) obj);
@@ -175,36 +201,36 @@ void thexptable::export_survey_entraces(thsurvey * survey)
 
   // insert entrances within this survey
   size_t nstat = this->db->db1d.station_vec.size(), i;
-  for(i = 0; i < nstat; i++) {
-    st = &(this->db->db1d.station_vec[i]);    
-    if ((st->flags & TT_STATIONFLAG_ENTRANCE) != 0) {
-      if (((exploc) && (survey->entrance.id > 0) && (survey->stat.num_entrances > 1) && (st->survey->is_in_survey(survey))) ||
-        ((survey->entrance.id == 0) && (st->survey->id == survey->id))) {
-          this->m_table.insert_object(NULL);          
-          this->m_table.get_object()->m_tree_level = (size_t)(survey->level - 1);
-          std::string * tmps = get_tmp_string();
-          *tmps = survey->get_reverse_full_name();
-          *tmps += ".";
-          *tmps += st->name;
-          this->m_table.get_object()->m_tree_node_id = tmps->c_str();
-          this->m_table.insert_attribute("Title", st->comment);
-          this->m_table.insert_attribute("Length","");
-          this->m_table.insert_attribute("Depth","");
-          if (st->explored > 0.0) {
-            this->m_table.insert_attribute("Explored", (long)(st->explored + 0.5));
-          } else {
-            this->m_table.insert_attribute("Explored", "");
-          }
-          if (exploc) {
-            this->m_table.insert_attribute("X",st->x);
-            this->m_table.insert_attribute("Y",st->y);
-          }
-          this->m_table.insert_attribute("Altitude",st->z);
-          if (this->expattr) this->m_table.copy_attributes(this->db->db1d.m_station_attr.get_object((long)i+1));
+  if (this->surveys || (!is_cave)) {
+    for(i = 0; i < nstat; i++) {
+      st = &(this->db->db1d.station_vec[i]);    
+      if ((st->flags & TT_STATIONFLAG_ENTRANCE) != 0) {
+        if (((exploc) && (survey->entrance.id > 0) && (survey->stat.num_entrances > 1) && (st->survey->is_in_survey(survey))) ||
+          ((survey->entrance.id == 0) && (st->survey->id == survey->id))) {
+            this->m_table.insert_object(NULL);          
+            this->m_table.get_object()->m_tree_level = (this->surveys ? (size_t)(survey->level - 1) : 0);
+            std::string * tmps = get_tmp_string();
+            *tmps = survey->get_reverse_full_name();
+            *tmps += ".";
+            this->m_table.get_object()->m_tree_node_id = (this->surveys ? tmps->c_str() : "");
+            this->m_table.insert_attribute("Title", ths2txt(st->comment).c_str());
+            this->m_table.insert_attribute("Length","");
+            this->m_table.insert_attribute("Depth","");
+            if (st->explored > 0.0) {
+              this->m_table.insert_attribute("Explored", (long)(st->explored + 0.5));
+            } else {
+              this->m_table.insert_attribute("Explored", "");
+            }
+            if (exploc) {
+              this->m_table.insert_attribute("X",st->x);
+              this->m_table.insert_attribute("Y",st->y);
+            }
+            this->m_table.insert_attribute("Altitude",st->z);
+            if (this->expattr) this->m_table.copy_attributes(this->db->db1d.m_station_attr.get_object((long)i+1));
+        }
       }
     }
   }
-
 
 
 }
@@ -267,10 +293,10 @@ void thexptable::process_db(class thdatabase * dbp)
         for(oi = this->db->object_list.begin(); oi != this->db->object_list.end(); oi++) {
           if ((*oi)->get_class_id() == TT_POINT_CMD) {
             pt = (thpoint*)(*oi);
-            if ((pt->type == TT_POINT_TYPE_CONTINUATION) && (pt->text != NULL) && (pt->fsptr->is_selected())) {
+            if ((pt->type == TT_POINT_TYPE_CONTINUATION) && ((pt->text != NULL) || (!this->filter)) && (pt->fsptr->is_selected())) {
               this->db->db2d.process_projection(pt->fscrapptr->proj);
               this->m_table.insert_object(NULL);
-              this->m_table.insert_attribute("Comment",pt->text);
+              this->m_table.insert_attribute("Comment",ths2txt(pt->text).c_str());
 	            if (!thisnan(pt->xsize))
                       this->m_table.insert_attribute("Explored",pt->xsize);
 	            else
@@ -292,7 +318,7 @@ void thexptable::process_db(class thdatabase * dbp)
                 if (strlen(survey) == 0)
                   survey = NULL;
               }
-              this->m_table.insert_attribute("Survey", survey);
+              this->m_table.insert_attribute("Survey", ths2txt(survey).c_str());
               this->m_table.insert_attribute("Station", st != NULL ? st->name : NULL);
               if (this->format == TT_EXPTABLE_FMT_KML) { 
                 thcs2cs(thcsdata_table[thcfg.outcs].params, thcsdata_table[TTCS_LONG_LAT].params, 
@@ -307,9 +333,9 @@ void thexptable::process_db(class thdatabase * dbp)
         }
         for(i = 0; i < nstat; i++) {
           st = &(dbp->db1d.station_vec[i]);
-          if (((st->flags & TT_STATIONFLAG_CONT) != 0) && (st->comment != NULL) && (st->survey->is_selected())) {
+          if (((st->flags & TT_STATIONFLAG_CONT) != 0) && ((st->comment != NULL) || (!this->filter)) && (st->survey->is_selected())) {
             this->m_table.insert_object(NULL);
-            this->m_table.insert_attribute("Comment",st->comment);
+            this->m_table.insert_attribute("Comment",ths2txt(st->comment).c_str());
 	          if (!thisnan(st->explored))
                     this->m_table.insert_attribute("Explored",st->explored);
 	          else
@@ -321,7 +347,7 @@ void thexptable::process_db(class thdatabase * dbp)
               if (strlen(survey) == 0)
                 survey = NULL;
             }
-            this->m_table.insert_attribute("Survey", survey);
+            this->m_table.insert_attribute("Survey", ths2txt(survey).c_str());
             this->m_table.insert_attribute("Station", st->name);            
             if (this->format == TT_EXPTABLE_FMT_KML) { 
               thcs2cs(thcsdata_table[thcfg.outcs].params, thcsdata_table[TTCS_LONG_LAT].params, 
@@ -350,7 +376,7 @@ void thexptable::process_db(class thdatabase * dbp)
             this->m_table.insert_object(NULL);          
             this->m_table.get_object()->m_tree_level = (size_t)(srv->level - 2);
             this->m_table.get_object()->m_tree_node_id = srv->get_reverse_full_name();
-            this->m_table.insert_attribute("Title", ((strlen(srv->title) > 0) ? srv->title : srv->name));
+            this->m_table.insert_attribute("Title", ths2txt((strlen(srv->title) > 0) ? srv->title : srv->name).c_str());
             this->m_table.insert_attribute("Length",(long)(srv->stat.length + 0.5));
             if (srv->stat.station_top != NULL) {
               tmpd = srv->stat.station_top->z - srv->stat.station_bottom->z;

@@ -1,5 +1,18 @@
-[[pri definovani globalnych funkcii, typov a premennych pouzivat prefix "th" 
-   resp. "TH" (napr. thprint_tex_encodings, THFONTS)]]
+thbook: export map -fmt bbox
+
+nastavitelny okraj vyplne pod legendou (0 pre map-image!)
+
+metapost: warningy len v debug mode; interaktivny mod pre -d (s vysvetlenim v thbooku, ktore premenne pouzit)
+
+do thbooku vysvetlenie o debugovani MP (mail muttonovi 15.1.09 
+
+zvacsovanie fontov v suradniciach
+
+pri reze grid vpravo pretrca cez mapu (postupne skladanie)
+
+
+v atlase nie je moznost pouzit mierku a sever pred vlozenim map (formdef vkladat uz v data.tex)
+rozmery zrkadla sadzby zmenit len pre mapy, nie pre uvod a legendu
 
 
 mapy vseobecne:
@@ -31,8 +44,11 @@ thpdf:
 
 thsvg:
 
+ * pattern coloring using symbol-color
+   - delete setgray and setrgbcolor when converting pattern body
+   - extend structures to include pattcolor
+   - use "inherit" color
  * uxivatelsky prefix pre ids
-
  * fonty - orezavacie cesty + vkladanie?
  * layers cez javascript
  * (priehladnost -> SVG 1.2)
@@ -67,6 +83,7 @@ tex:
 
 mpost:
 
+ * konfigurovatelna velkost textu v mierke a velkost sipky na sever
  * point stalctites,stalagmites, via-ferrata
  * gradientny prechod pre areas
  * poriesit odsadenie bodovych znaciek a najma labelov

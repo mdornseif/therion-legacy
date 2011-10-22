@@ -69,6 +69,7 @@ enum {
 	LXMENU_VIEW,
   LXMENU_VIEW_FULLSCREEN,
   LXMENU_VIEW_MODELSTP,
+  LXMENU_VIEW_SELECTIONSTP,
   LXMENU_VIEW_VIEWPOINTSTP,
   LXMENU_TOOLS_OPTIONS,
 	LXMENU_VIEWEND,
@@ -79,6 +80,7 @@ enum {
   LXMENU_FILE_RENDER,
   LXMENU_FILE_RENDER_SETUP,
   LXMENU_FILE_EXPORT,
+  LXMENU_FILE_IMPORT,
   LXMENU_HELP_CONTENTS,
   LXMENU_HELP_CONTROL,
   LXMENU_HELP_RENDERING,
@@ -108,6 +110,10 @@ enum {
   LXTB_VISSURFACE,
   LXTB_VISBBOX,
   LXTB_VISINDS,
+  LXTB_VISENTRANCE,
+  LXTB_VISFIX,
+  LXTB_VISSTATION,
+  LXTB_VISLABEL,
 	LXTBEND,
 };
 
@@ -118,6 +124,11 @@ enum {
   LXWALLS_INTERP_MISSING,
 };
 
+enum {
+  LXUNITS_METRIC,
+  LXUNITS_IMPERIAL,
+};
+
 
 class lxFrame: public wxFrame
 {
@@ -125,7 +136,7 @@ class lxFrame: public wxFrame
   public:
 
     lxGLCanvas * canvas;
-    wxString m_fileName, m_fileDir, m_fileToOpen;
+    wxString m_fileDir, m_fileToOpen, m_fileName;
     int m_fileType;
     
     struct lxData * data;
@@ -134,6 +145,9 @@ class lxFrame: public wxFrame
 
     class lxModelSetupDlg * m_modelSetupDlg;
     bool m_modelSetupDlgOn;
+
+    class lxModelTreeDlg * m_selectionSetupDlg;
+    bool m_selectionSetupDlgOn;
 
 		class lxViewpointSetupDlg * m_viewpointSetupDlg;
     bool m_viewpointSetupDlgOn;
@@ -147,6 +161,7 @@ class lxFrame: public wxFrame
     wxFileHistory * m_fileHistory;
     wxString m_iniDirectory;
 
+    long m_iniUnits;
     int m_iniStereoGlasses;
     int m_iniStereoGlassesLast;
     long m_iniWallsInterpolate;
@@ -174,21 +189,32 @@ class lxFrame: public wxFrame
 		void ToggleRotLock();
     void ToggleFullScreen();
     void ToggleModelSetup();
+    void ToggleSelectionSetup();
     void ToggleViewpointSetup();
 
     void ToggleVisibilityCenterline();
     void ToggleVisibilityCenterlineCave();
     void ToggleVisibilityCenterlineSurface();
+    void ToggleVisibilityCenterlineSplay();
+    void ToggleVisibilityCenterlineDuplicate();
+    void ToggleVisibilityCenterlineFix();
+    void ToggleVisibilityCenterlineStation();
+    void ToggleVisibilityCenterlineEntrance();
     void ToggleVisibilitySurface();
     void ToggleVisibilityWalls();
     void ToggleVisibilityLabels();
     void ToggleVisibilityBBox();
     void ToggleVisibilityGrid();
     void ToggleVisibilityIndicators();
+    void ToggleVisibilityStLabelName();
+    void ToggleVisibilityStLabelComment();
+    void ToggleVisibilityStLabelAltitude();
+    void ToggleVisibilityStLabelSurvey();
     void ExportRotationPictures();
 
     void SetColorMode(int);
     void DetectFileType();
+    int GetFileType(wxString fName);
     void ToggleColorsApplyCenterline();
     void ToggleColorsApplyWalls();
 
@@ -200,7 +226,9 @@ class lxFrame: public wxFrame
     void SetupUpdate();
     void SetupApply();
     void OpenFile(const wxString & fName);
+    void ImportFile(const wxString fName, int fType);
 
+    void LoadData(wxString fName, int fType);
     void ReloadData();
 		void UpdateM2TB();
 

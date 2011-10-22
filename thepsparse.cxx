@@ -514,8 +514,9 @@ void parse_eps(string fname, string cname, double dx, double dy,
                converted_data & data, double R, double G, double B) {
   string tok, buffer;
   string font, patt;
+  string pattcolor = "0 0 0";
   bool comment = true, concat = false, 
-       already_transp = false, transp_used = false;
+       already_transp = false, transp_used = false, before_group_transp = false;
   double llx = 0, lly = 0, urx = 0, ury = 0, HS = 0.0, VS = 0.0;
   deque<string> thbuffer;
   set<string> FORM_FONTS, FORM_PATTERNS;
@@ -724,10 +725,14 @@ void parse_eps(string fname, string cname, double dx, double dy,
         if (!inpath) data.MP.add(MP_gsave);
         else gsaveinpath = true;
         thbuffer.clear();
+        if (already_transp) before_group_transp = true;
+        else before_group_transp = false;
       }
       else if (tok == "grestore") {
         if (!inpath) data.MP.add(MP_grestore);
         thbuffer.clear();
+        if (before_group_transp) already_transp = true;
+        else already_transp = false;
       }
       else if (tok == "translate") {
         mp_trans.set(MP_translate,thbuffer[0],thbuffer[1],llx,lly);
@@ -803,6 +808,10 @@ void parse_eps(string fname, string cname, double dx, double dy,
 	text.b = B;
         concat = false;
         data.MP.add(text);
+        thbuffer.clear();
+      }
+      else if (tok == "THsetpatterncolor") {
+        pattcolor = thbuffer[0] + " " + thbuffer[1] + " " + thbuffer[2];
         thbuffer.clear();
       }
       else {

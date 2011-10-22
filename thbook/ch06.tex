@@ -30,8 +30,11 @@ If you want to compile Therion from source code and run it, you need
 %  and 
 * \TeX\ distribution with at least \TeX\ with Plain format, 
   recent pdf\TeX, and \MP\ (\www{http://www.tug.org}). 
+* LCDF Typetools package (\www{http://www.lcdf.org/type/})
 * ImageMagick distribution with {\it convert} and {\it identify} utilities, 
-  if you want to morph survey sketches.
+  if you want to use warping of survey sketches.
+* {\it ghostscript} if you want to create calibrated images from georeferenced
+  PDF maps.
 \endlist
 
 To compile Loch, you need
@@ -40,6 +43,7 @@ To compile Loch, you need
 * freetype 2 and newer; freetype-config must work
 * wxWidgets 2.6 and newer; wx-config must work
 * VTK 5.0 and newer
+* libjpeg, libpng, zlib
 \endlist
 
 All programs (with the exception of BWidget and tkImg package) are usually 
@@ -51,7 +55,7 @@ It's a distribution of GNU utilities with GNU make and GCC.
 \subsubchapter Quick start.
 
 \list
-* unpack the source distribution |therion-0.5.*.tar.gz|
+* unpack the source distribution |therion-5.*.tar.gz|
 * |cd therion|
 * |make config-macosx| or |make config-win32|, if you use MacOS~X or Windows, 
   respectively
@@ -91,7 +95,7 @@ Therion's {\it makefile} may take some optional parameters.
 {\it Adding new translations}
 
 Therion supports translation of map labels. 
-Suppose you want to add a new language xx. 
+Suppose you want to add a new language |xx|. 
 
 \list
 * run `|perl process.pl export xx|' in the `thlang' Therion source subdirectory. 
@@ -117,7 +121,11 @@ comments follow the `|#|' character.
 
 {\it Adding new \TeX\ encodings}
 
-It's easy to add new encodings for 2D map output. Copy an appropriate encoding 
+It's easy to add new encodings for 2D map output.%
+\[\NEW{5.3}This section applies to old-style font selection using |tex-fonts|
+command in the initialization file and is obsolete when using |pdf-fonts| 
+command.]
+Copy an appropriate encoding 
 mapping file with an |*.enc| extension to the |texenc/encodings|, run the Perl 
 script |mktexenc.pl| located in the |texenc| directory and compile Therion.
 
@@ -193,7 +201,7 @@ supported initialization commands follow.
         
 * |language <xx[_YY]>|  
 
-  Default output language (used for maps). See the layout command for
+  Default output language. See the copyright page for
   the list of available languages.
 
 * |units <metric/imperial>| 
@@ -204,6 +212,10 @@ supported initialization commands follow.
 
   Set the full path to a \MP\ executable if Therion can't find it 
   (``|mpost|'' is the default).
+
+* |mpost-options <string>|
+
+  Set \MP\ options.
 
 * |pdftex-path <file-path>|
 
@@ -249,9 +261,35 @@ supported initialization commands follow.
   Using this option you can change any default therion text translation in output.
   For list of therion texts and available translations, see |thlang/texts.txt| file.
 
+* |pdf-fonts <rm> <it> <bf> <ss> <si>|\NEW{5.3}
+
+  Set-up fonts to be used in PDF maps. 
+  The command has to be followed by paths specifying where regular, italic,
+  bold, sans-serif and sans-serif oblique fonts are located in your system.
+  TrueType and OpenType fonts are supported. 
+  
+  Therion requires LCDF Typetools to be installed on your system to use this
+  command. Example:
+  
+  |pdf-fonts  "/usr/share/fonts/Serif.ttf" \
+           "/usr/share/fonts/Serif-Italic.ttf" \
+           "/usr/share/fonts/Serif-Bold.ttf" \
+           "/usr/share/fonts/Sans.ttf" \
+           "/usr/share/fonts/Sans-Oblique.ttf"|
+
+* |otf2pfb <on/off>|\NEW{5.3}
+
+  When set to |on| (default), OpenType fonts used in |pdf-fonts| are
+  converted to PFB fonts, if they are PostScript-based. Some information
+  is lost in the PFB format, but there is advantage that pdf\TeX\ can embed 
+  subset of PFB fonts (in contrast with OpenType fonts which must be fully 
+  embedded).
+
 * |tex-fonts <encoding> <rm> <it> <bf> <ss> <si>|
         
-  Set-up fonts used for given encoding. The list of currently supported 
+  Original and more complicated way to set-up fonts for PDF maps. You need
+  to explicitly specify encoding (maximum 256 characters from the font
+  that will be used). The list of currently supported 
   encodings gives the |--print-tex-encodings| command line option.   
   The same encoding must be used while generating \TeX\ metrics (|*.tfm| files) 
   for those fonts (e.g.~with the afm2tfm program) and this encoding must be
@@ -485,6 +523,7 @@ new features to be implemented:
 \list
 * complete the predefined symbol sets
 * generate registers for atlas
+* use MPlib instead of \MP
 \endlist
 
 
@@ -503,8 +542,9 @@ new features to be implemented:
 \subsubchapter Loch.
 
 \list
-* station labels and markers, colour schemes
+* colour schemes
 * survey tree for selecting sub-surveys to display
+* spatial filtering (e.g.~clipping by planes)
 * support for multiple surfaces
 \endlist
 
