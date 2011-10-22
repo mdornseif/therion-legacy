@@ -54,7 +54,7 @@ LXPLATFORM = LINUX
 # PLATFORM MACOSX
 ##CXX = c++
 ##CC = cc
-##POBJECTS = getline.o
+##POBJECTS = 
 ##CXXPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cxxflags) -I$(VTKPATH) -Wno-deprecated -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
 ##CCPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cflags) -I/usr/X11R6/include
 ##LXLIBDIR = 
