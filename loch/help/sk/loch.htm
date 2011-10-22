@@ -1,0 +1,149 @@
+﻿<!DOCTYPE	HTML PUBLIC	"-//IETF//DTD	HTML//EN">
+<HTML>
+  <HEAD>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <TITLE>Loch</TITLE>
+  </HEAD>
+  <BODY>
+    <FONT FACE="Helvetica">
+      <H1>Loch</H1>
+      <H2>Obsah</H2>
+      <UL>
+        <LI>
+          <A HREF="#Control">Základné ovládanie</A>
+        <LI>
+          <A HREF="#Rendering">Rendrovanie do súboru</A>
+        <LI>
+          <A HREF="#Bugs">Známe problémy</A></LI>
+      </UL>
+      <P><BR>
+      </P>
+      <A NAME="Control">
+        <H2>Základné ovládanie</H2>
+      </A>
+      <TABLE cellSpacing="2" cellPadding="2">
+        <TR>
+          <TD vAlign="top"><B>Funkcia</B></TD>
+          <TD vAlign="top"><B>Ovládanie</B></TD>
+          <TD vAlign="top"><B>Klávesa</B></TD>
+        </TR>
+        <TR>
+          <td colspan="3"><HR>
+          </td>
+        </TR>
+        <TR>
+          <TD vAlign="top">Zoom &amp; otáčanie</TD>
+          <TD vAlign="top">Ľavé tlačítko + posun</TD>
+          <TD vAlign="top"></TD>
+        </TR>
+        <TR>
+          <TD vAlign="top">Iba zoom</TD>
+          <TD vAlign="top">Ľavé tlačítko + posun hore/dole,<BR>
+            potom držať pravé a kliknúť ľavé tlačítko</TD>
+          <TD vAlign="top">Ctrl + Hore/Dolu</TD>
+        </TR>
+        <TR>
+          <TD vAlign="top">Iba otáčanie</TD>
+          <TD vAlign="top">Ľavé tlačítko + posun vľavo/vpravo,<BR>
+            potom držať ľavé a kliknúť pravé tlačítko</TD>
+          <TD vAlign="top">Vľavo/Vpravo</TD>
+        </TR>
+        <TR>
+          <TD vAlign="top">Posun</TD>
+          <TD vAlign="top">Pravé tlačítko + posun</TD>
+          <TD vAlign="top">Shift + Šípky</TD>
+        </TR>
+        <TR>
+          <TD vAlign="top">Sklon</TD>
+          <TD vAlign="top">Stredné tlačítko (koliesko) + posun<BR>
+            alebo otáčanie kolieska</TD>
+          <TD vAlign="top">Hore/Dole</TD>
+        </TR>
+        <TR>
+          <td colspan="3"><HR>
+          </td>
+        </TR>
+        <TR>
+          <TD vAlign="top">Celá obrazovka</TD>
+          <TD vAlign="top">Dvojklik ľavým tlačítkom</TD>
+          <TD vAlign="top">F11</TD>
+        </TR>
+        <TR>
+          <TD vAlign="top">Menu</TD>
+          <TD vAlign="top">Pravé tlačítko</TD>
+          <TD vAlign="top"></TD>
+        </TR>
+      </TABLE>
+      <P>
+        Ak je zapnutá automatická rotácia, tak pohyb myšou mení rýchlosť alebo smer
+        rotácie. Ak rotácia je zamknutá, tak pohyb myšou na ňu nemá vplyv.
+      </P>
+      <P><BR>
+      </P>
+      <H2><A NAME="Rendering">Rendrovanie do súboru</A></H2>
+      <P>Loch môže rendrovať obrázky vo vysokom rozlíšení, ktoré je možné následne
+         spracovať a vytlačiť. Obrázky môžu byť exportované v PDF, PNG alebo BMP formáte.
+         Konfigurácia exportu sa robí prostredníctvom dialógového okna <EM>Nastavenie rendrovania</EM>.
+         Môžete v ňom nastaviť nasledovné:</P>
+      <h3>Veľkosť a mierka</h3>
+      <table cellSpacing="2" cellPadding="2">
+        <tr>
+          <td vAlign="top"><EM>Kópia&nbsp;obrazovky</EM></td>
+          <td vAlign="top">Do súboru bude uložená presná kópia obrazovky.</td>
+        </tr>
+        <tr>
+          <td vAlign="top"><EM>Šírka&nbsp;obrázku</EM></td>
+          <td vAlign="top">Obsah obrazovky bude mať špecifikovanú šírku.</td>
+        </tr>
+        <tr>
+          <td vAlign="top"><EM>Výška&nbsp;obrázku</EM></td>
+          <td vAlign="top">Obsah obrazovky bude mať špecifikovanú výšku.</td>
+        </tr>
+        <tr>
+          <td vAlign="top"><EM>Mierka</EM></td>
+          <td vAlign="top">Obsah obrazovky bude exportovaný v danej mierke.</td>
+        </tr>
+      </table>
+      <h3>Nastavenia obrázku</h3>
+      <table cellSpacing="2" cellPadding="2">
+        <tr>
+          <td vAlign="top"><EM>Rozlíšenie</EM></td>
+          <td vAlign="top">Rozlíšenie obrázku pokiaľ sú špecifikované jeho rozmery alebo presná
+          mierka.</td>
+        </tr>
+        <tr>
+          <td vAlign="top"><EM>Veľkosť&nbsp;obrázku</EM></td>
+          <td vAlign="top">Vypočítaná veľkosť obrázku v bodoch a nekomprimovaných bajtoch podľa
+          predchádzajúcich nastavení.
+          </td>
+        </tr>
+        <tr>
+          <td vAlign="top"><EM>Biele&nbsp;pozadie</EM></td>
+          <td vAlign="top">Biele pozadie v exportovanom obrázku - používa sa pri tlači.</td>
+        </tr>
+      </table>
+      <P>&nbsp;</P>
+      <A NAME="Bugs">
+        <H2>Známe problémy</H2>
+      </A>
+      <ul>
+        <li>
+          V exportovanom obrázku sa občas zobrazí prázdny štvoruholník. Zmena veľkosti okna tento
+          problém obyčajne vyrieši.</li>
+      </ul>
+      <H3>Špecifické pre Windows</H3>
+      <UL>
+        <LI>
+        Textúry majú niekedy čudnú farebnú vzorku, pomôže súbor znovu načítať.
+        <LI>
+        Farby chodieb sú náhodné. Treba reštartovať program alebo počítač.</LI>
+      </UL>
+      <H3>Špecifické pre Linux</H3>
+      <UL>
+        <LI>
+        Občas nefunguje stereo mód.</LI>
+      </UL>
+      <P></P>
+    </FONT>
+  </BODY>
+</HTML>

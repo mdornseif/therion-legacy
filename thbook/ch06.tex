@@ -1,0 +1,519 @@
+\eject
+\vbox{\hsize=93.2mm\baselineskip=12pt\leftskip3.5mm\parskip0pt
+\eightit
+\leavevmode\llap{1. }When a distinguished but elderly scientist states that something is possible, he is almost certainly right. When he states that something is impossible, he is very probably wrong.
+
+\leavevmode\llap{2. }The only way of discovering the limits of the possible is to venture a little way past them into the impossible.
+
+\leavevmode\llap{3. }Any sufficiently advanced technology is indistinguishable from magic.
+\vskip 6pt
+\rightline{\eightrm ---Arthur C. Clarke, {\eightmit 1973}}
+}
+
+\chapter Appendix.
+
+\subchapter Compilation.
+
+If you want to compile Therion from source code and run it, you need 
+(first three are required only during compilation):
+\list
+* GNU C/C++ compiler
+* GNU make
+* Perl
+* Tcl/Tk 8.4.3 and newer (\www{http://www.tcl.tk}) with 
+  {\it BWidget} widget set  \hfil\break
+  (\www{http://sourceforge.net/projects/tcllib})
+  and optionally {\it tkImg} extension \hfil\break
+  (\www{http://sourceforge.net/projects/tkimg}).   
+%  {\it Tom} OpenGL extension (improved version is included in Therion source 
+%  distribution)
+%  and 
+* \TeX\ distribution with at least \TeX\ with Plain format, 
+  recent pdf\TeX, and \MP\ (\www{http://www.tug.org}). 
+* ImageMagick distribution with {\it convert} and {\it identify} utilities, 
+  if you want to morph survey sketches.
+\endlist
+
+To compile Loch, you need
+
+\list
+* freetype 2 and newer; freetype-config must work
+* wxWidgets 2.6 and newer; wx-config must work
+* VTK 5.0 and newer
+\endlist
+
+All programs (with the exception of BWidget and tkImg package) are usually 
+included in Linux, Unix or MacOS\,X distributions.
+For Windows consider using MinGW and MSYS (\www{http://www.mingw.org}).
+It's a distribution of GNU utilities with GNU make and GCC.
+(BTW, why not to use precompiled Windows version?)
+
+\subsubchapter Quick start.
+
+\list
+* unpack the source distribution |therion-0.5.*.tar.gz|
+* |cd therion|
+* |make config-macosx| or |make config-win32|, if you use MacOS~X or Windows, 
+  respectively
+* |make|
+* |sudo make install|
+\endlist
+
+%Installing Tom:
+%
+%\list
+%* if you use Windows, download a Tcl/Tk source distribution, |make| and
+%  |make install| it under MSYS
+%* |cd therion/thtom/linux| or |cd therion/thtom/win|
+%* |make|
+%* copy |Tom0.2| directory (which should contain |pkgIndex.tcl| and one of 
+%  |libtom.so| or |libtom.dll|) 
+%  to the |lib| subdirectory of your 
+%  Tcl/Tk distribution.
+%\endlist
+
+\subsubchapter Hacker's guide.
+
+{\it Make parameters}
+
+Therion's {\it makefile} may take some optional parameters.
+
+\list
+* |config-linux|, |config-macosx|, |config-win32| = configure Therion for a 
+  specific platform. Linux is a default.
+* |config-release|, |config-oxygen|, |config-ozone| = set optimization level 
+  for C++ compiler (none, |-O2| and |-O3|)  
+* |config-debug| = useful before debugging the program  
+* |install| = install Therion
+* |clean| = delete all temporary files
+\endlist
+
+{\it Adding new translations}
+
+Therion supports translation of map labels. 
+Suppose you want to add a new language xx. 
+
+\list
+* run `|perl process.pl export xx|' in the `thlang' Therion source subdirectory. 
+  This creates a file |texts_xx.txt|. This file is UTF-8 encoded.
+* edit the |texts_xx.txt| file. Add your translations at lines beginning with
+  `|xx:|'.
+* run |make update|
+* compile Therion
+\endlist
+
+
+{\it Adding new encodings}
+
+Although UTF-8 Unicode encoding covers all characters which Therion is able to 
+process, it may be inconvenient to use it. In that case it's possible to add 
+support for any 8-bit encoding for text input files. Copy a translation file to 
+the |thchencdata| directory; add its name to `ifiles' hash in the beginning of 
+the Perl script |generate.pl|; run it and recompile Therion.
+
+The translation file should contain two hexadecimal values of a character 
+(first one in the 8-bit encoding, second one in Unicode) in each line. Possible 
+comments follow the `|#|' character. 
+
+{\it Adding new \TeX\ encodings}
+
+It's easy to add new encodings for 2D map output. Copy an appropriate encoding 
+mapping file with an |*.enc| extension to the |texenc/encodings|, run the Perl 
+script |mktexenc.pl| located in the |texenc| directory and compile Therion.
+
+Therion uses the same encoding files as |afm2tfm| program from the \TeX\ 
+distribution, which has the same format as an encoding vector in a PostScript 
+font. You may find more details in the chapter {\it 6.3.1.5 Encoding file 
+format} in the documentation to Dvips program.
+
+
+{\it Generating new \TeX\ and \MP\ headers}
+
+Therion uses \TeX\ and \MP\ for 2D map visualization and typesetting. 
+Predefined macros are compiled into the Therion executable and are copied to 
+the working directory just before running \MP\ and \TeX\ (unless the 
+|--use-extern-libs| option is used). Layout command makes it possible to modify 
+some macros in the configuration file at the run-time. 
+
+However, it's possible to make permanent changes to the macro files. After 
+modifying the files in the |mpost| and |tex| directories it's necessary to run 
+Perl scripts |genmpost.pl| and |gentex.pl|, which generate C++ header files, 
+and compile Therion executable again.
+
+\subchapter Environment variables.
+
+Therion reads following environment variables:
+
+\list
+* |THERION| = [not required] search path for (x)therion.ini file(s)
+* |HOME| (|HOMEDRIVE| + |HOMEPATH| on WinXP) = 
+  [not required, but usually present on your system] search path 
+  for (x)therion.ini file(s)
+* |TEMP|, |TMP| = system temporary directory, where Therion stores temporary 
+  files (in a directory named |th$PID$|, where |$PID$| is a process ID),
+  unless |tmp-path| is specified in the initialization file.
+\endlist
+
+Consult the documentation of your OS how to set them.
+
+\subchapter Initialization files.
+
+Therion's and XTherion's system dependent settings are specified in the 
+file therion.ini or xtherion.ini, respectively.
+They are searched for in the following directories:
+
+\list
+* on UNIX: 
+  |.|, |$THERION|, |$HOME/.therion|, |/etc|, |/usr/etc|, |/usr/local/etc|
+* on Windows:
+  |.|, |$THERION|, |$HOME\.therion|, |<Therion-installation-directory>|, 
+  |C:\WINDOWS|, |C:\WINNT|, |C:\Program Files\Therion|
+\endlist
+ 
+\subsubchapter Therion.
+
+If no file is found Therion uses its default settings. If you want to list
+them, use |--print-init-file| option. The initialization file is read 
+like any other therion file. (Empty lines or lines starting with `|#|' are 
+ignored; lines ending with a backslash continue on next line.) Currently 
+supported initialization commands follow.
+
+\list
+* |loop-closure <therion/survex>|
+
+  By default, survex is used if present, otherwise therion.
+
+* |encoding-default <encoding-name>|
+
+  Set the default output encoding (currently unused).
+
+* |encoding-sql <encoding-name>|
+
+  Set the default output encoding for SQL export.
+        
+* |language <xx[_YY]>|  
+
+  Default output language (used for maps). See the layout command for
+  the list of available languages.
+
+* |units <metric/imperial>| 
+
+  Set default units.
+
+* |mpost-path <file-path>|
+
+  Set the full path to a \MP\ executable if Therion can't find it 
+  (``|mpost|'' is the default).
+
+* |pdftex-path <file-path>|
+
+  Set the full path to a pdf\TeX\ executable if Therion can't find it 
+  (``|pdfetex|'' is the default).
+
+* |identify-path <file-path>|
+
+  Set the full path to ImageMagick's identify executable if Therion
+  can't find it (``|identify|'' is the default).
+  
+* |convert-path <file-path>|
+
+  Set the full path to ImageMagick's convert executable if Therion
+  can't find it (``|convert|'' is the default).
+
+* |source-path <directory>| 
+
+  Path to data and configuration files. Used mostly for system-wide grades and 
+  layout definitions.
+
+* |tmp-path <directory>| 
+
+  Path where temporary directory should be created.
+  
+* |tmp-remove <OS command>| 
+
+  System command to delete files from the temporary directory.
+
+* |tex-env <on/off>| 
+
+  [Works on Windows only.]
+  When set to |off| (default), Therion temporarily clears all environment 
+  variables related to \TeX. Useful if there is other \TeX distribution
+  installed on your system which had set-up any environment variables,
+  which could confuse \TeX\ and \MP\ programs supplied in Therion for Windows
+  distribution. 
+  
+  Set to |on| if you use other \TeX\ distribution for maps processing.
+
+* |text <language ID> <therion text> <my text>|
+
+  Using this option you can change any default therion text translation in output.
+  For list of therion texts and available translations, see |thlang/texts.txt| file.
+
+* |tex-fonts <encoding> <rm> <it> <bf> <ss> <si>|
+        
+  Set-up fonts used for given encoding. The list of currently supported 
+  encodings gives the |--print-tex-encodings| command line option.   
+  The same encoding must be used while generating \TeX\ metrics (|*.tfm| files) 
+  for those fonts (e.g.~with the afm2tfm program) and this encoding must be
+  explicitly given also in the pdf\TeX's map file. The only exception is the 
+  base set of Computer Modern fonts, which use `raw' encoding. This encoding
+  doesn't need to be specified in the pdf\TeX's map file.
+  
+  Encoding has to be followed by five font specifications for regular, italic,
+  bold, sans-serif and sans-serif oblique styles.
+  Default setting is |tex-fonts raw cmr10 cmti10 cmbx10 cmss10 cmssi10|
+  
+  Example how to use other fonts (e.g.~TrueType Palatino in xl2 (an encoding 
+  derived from ISO8859-2) encoding). Run:
+  
+  |ttf2afm -e xl2.enc -o palatino.afm palatino.ttf|
+  
+  |afm2tfm palatino.afm -u -v vpalatino -T xl2.enc|
+
+  |vptovf vpalatino.vpl vpalatino.vf vpalatino.tfm|
+  
+  You get files |vpalatino.vf|, |vpalatino.tfm| and |palatino.tfm|. Add the line 
+  
+  |palatino <xl2.enc <palatino.ttf|
+  
+  to the pdf\TeX's map file. The same should be done for the italic and bold
+  faces and corresponding sans-serif and sans-serif-oblique fonts. If you're lazy
+  try 
+  
+  |tex-fonts xl2 palatino palatino palatino palatino palatino|
+  
+  (We should use actually virtual font |vpalatino| instead of |palatino|,
+  which contains no kerning or ligatures, but
+  pdf\TeX\ doesn't support |\pdfincludechars| command on virtual fonts.
+  To be improved.)
+    
+  If you want to add some unsupported encodings, 
+  read the chapter {\it Compilation / Hacker's guide}. 
+\endlist
+
+
+\subsubchapter XTherion.
+
+Initialization file for XTherion is actually a Tcl script evaluated when 
+XTherion starts. The file is commented; see the comments for details.
+
+
+%\subsubchapter Speed optimization.
+%
+%[Optionally creating \MP\ and \TeX\ format files.]
+
+\subchapter Limitations.
+
+\list
+*  scrap size = $\approx 2.8 \times 2.8$ m in the output scale (\MP\ limit)
+*  page size = 
+
+   PDF map or atlas: $\approx 5 \times 5$ m (pdf\TeX\ limit)
+   
+   SVG map: unlimited 
+*  scraps count = approx. 500--6000, depending on frequency of cross-sections
+   
+   current \MP\ limit: $4 (scraps + sections) < 4096$ (may be arbitrarily increased)
+
+   pdf\TeX\ limit: $2\times pages + images + patterns +
+                            6 (scraps + sections) < 32500$
+\endlist
+
+
+\subchapter Example data.
+
+Following simple example illustrates basic usage of Therion commands:
+
+|encoding  utf-8
+
+survey main -title "Test cave"
+  
+  survey first
+    centreline
+      units compass grad
+      data normal from to compass clino length
+                  1    2  100     -5    10
+    endcentreline
+  endsurvey
+
+  survey second -declination [3 deg]
+    centreline
+      calibrate length 0 0.96
+      data normal from to compass length clino
+                  1    2  0       10     +10
+    endcentreline
+  endsurvey
+ 
+  centreline
+    equate 2@first 1@second
+  endcentreline
+ 
+  # scraps are usually in separate *.th2 files
+  scrap s1 -author 2004 "Therion team"
+
+    point 763 746 station -name 2@second
+    point 702 430 station -name 2@first
+    point 352 469 station -name 1@first
+    point 675 585 air-draught -orientation 240 -scale large
+
+    line wall -close on
+      287 475
+      281 354 687 331 755 367
+      981 486 846 879 683 739
+      476 561 293 611 287 475
+    endline
+
+  endscrap
+
+  map m1 -title "Test map"
+    s1
+  endmap
+ 
+endsurvey|
+
+Corresponding configuration file could be:
+
+|encoding  utf-8
+source test
+
+layout l1
+  scale 1 100
+  layers off
+endlayout
+
+select m1@main
+
+export model -fmt survex
+export map -layout l1|
+
+If you save data file as `test.th' and configuration file as `thconfig' you may 
+process them with Therion.
+
+
+%\subchapter Map symbols library.
+
+%\input sym/symlib
+
+\subchapter History.
+
+\list
+\everypar{\hangindent16pt\hangafter1}
+* {\bf 1999}
+
+  Oct: first concrete ideas
+
+  Nov: start of programming (Perl scripts and \MP\ macros)
+
+  Dec 27: Therion compiles simple map for the first time (32 kB of Perl and 
+       \MP\ source code). This first release had some interesting features
+       such as {\it transformation functions}, which allowed user-specification
+       of the input format for survey data.
+				
+* {\bf 2000}\nobreak\par\nobreak
+  Jan: xthedit (Tcl/Tk), a graphical front-end for Therion
+
+  Feb 18: start of (first?) reprogramming (Perl)
+
+  Apr 1: first hyperlinked PDF cave map 
+
+  Aug: experiments with PDF, pdf\TeX\ and \MP
+
+* {\bf 2001}
+
+  Nov: start of reimplementation from scratch: 
+       Therion (C++ with some Perl scripts inherited from the previous version); 
+       interactive 2D map editor ThEdit as a replacement of xthedit (Delphi) 
+
+  Dec: ThEdit exports simple map for the first time
+
+* {\bf 2002}
+
+  Mar: Therion 0.1 ---
+       Therion is able to process survey data (centreline) of Dead Bats Cave.
+       XTherion, text editor designed for Therion (Tcl/Tk).
+
+  Jul 27: Therion 0.2 ---
+       Therion compiles simple map (consisting of two scraps)
+       for the first time (800 kB of source code)
+
+  Aug: XTherion extended to 2D map editor (as a replacement of ThEdit)
+
+  Sep: Therion compiles first real and complex map of a cave. XTherion
+       extended to compiler.
+
+%  Oct 5: Public presentation of Therion, held on Trango\v{s}ka
+
+* {\bf 2003}\nobreak
+
+  Mar: First version of The Therion Book finished
+
+  Apr: Therion included in Debian GNU/Linux
+
+  Jun: all Perl scripts rewritten in C++, Therion is one executable program
+       now (although using Survex and \TeX)
+       
+%  Nov 10: first idea of the Labyrinth project
+
+* {\bf 2004}\Nobreak
+
+  Mar: Therion 0.3 --- Therion exports 3D model created from 2D maps.
+  Loop closure algorithm included into Therion.
+
+* {\bf 2006}\Nobreak
+
+  Oct: Therion 0.4 --- New 3D viewer (Loch).
+
+* {\bf 2007}\Nobreak
+
+  Feb: Therion 0.5 --- Support for bitmap sketches morphing.
+\endlist
+
+
+\subchapter Future.
+
+Although Therion is already used for map production, there are a lot of 
+new features to be implemented:
+
+\subsubchapter General.
+
+\list
+* loop closure information in SQL
+\endlist
+
+\subsubchapter 2D maps.
+
+\list
+* complete the predefined symbol sets
+* generate registers for atlas
+\endlist
+
+
+\subsubchapter 3D models.
+
+\list
+* improve passage walls modeling
+\endlist
+
+\subsubchapter XTherion.
+
+\list
+* improve 2D editing capabilities
+\endlist
+
+\subsubchapter Loch.
+
+\list
+* station labels and markers, colour schemes
+* survey tree for selecting sub-surveys to display
+* support for multiple surfaces
+\endlist
+
+\subsubchapter Labyrinth.
+
+\list
+* completely new GUI in the far future (see \www{http://labyrinth.speleo.sk})
+\endlist
+
+
+
+\endinput

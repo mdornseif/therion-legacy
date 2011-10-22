@@ -1,0 +1,29 @@
+TODO:
++ check loch color table under linux, if problem use therion instead of VTK
++ survey tree
++ animation toolbox
++ multiple surfaces support
++ finish SK translation
++ fix Mac OS X built
++ search for help and localization files under Linux
++ scalebar to OpenGL list
++ channel brightness adjustment in stereo mode
++ station labeling
++ PNG texture support
++ color schemes (altitude, surveys, date)
++ add closed file mode
++ File->Close
++ escape in full-screen mode from toolboxes
+
+BUGS:
++ inactive loading file window
++ radiobutton not active when rotation
+
+MAC OS X:
+ a) Udelat z ni bundlovanou aplikaci
+ b) Dodat Info.plist, do kteryho se napisi typy souboru, 
+    ktery to ma zrat pretazenim, jaky maji mit obrazek
+    (asi mysli ikonu), koncovku, file type, atd.
+ c) Doprogramovat podporu pro tohle aby pri pretazeni 
+    se event zkonvertoval na udalost pro otevreni souboru 
+    aniz by te to otravovalo s oknem pro jeho vyber.

@@ -1,0 +1,47 @@
+encoding  utf-8
+#!PROCESS
+#!FILE 7
+#! The only thing that is missing is connection line between stations 1
+#! in these two branches.
+
+source cave3.th
+source cave3.th2
+#! Therion does not automatically generate these lines because their
+#! shape usually depends on particilar map. 
+#! 
+#! To draw such a line all you need to do is to create a simple scrap 
+#! with this line. Here is an example:
+source
+centerline
+  extend hide 5 5'
+endcenterline
+#!CODE
+scrap sc -proj extended
+  point 0 0 station -name 1 -from 5 -visibility off
+  point 100 0 station -name 1 -from 2 -visibility off
+  line map-connection
+      0   5
+      0  15
+    100  15
+    100   5
+  endline
+endscrap
+#!ENDCODE
+#! As you can see, even there are two stations with same name, they
+#! are distinguished by <code>-from</code> option, which specifies
+#! previous station in extended elevation. Using this scrap you receive the
+#! final map:
+map mc
+  sc
+endmap
+endsource
+
+select mc
+select m
+
+#!IMAGE map5.pdf
+
+input thconfig.layout
+export map -proj extended -o map5.pdf -layout l -layout-scale 1 500
+
+#!CLEAN map5.pdf

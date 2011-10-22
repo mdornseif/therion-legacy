@@ -1,0 +1,268 @@
+% The Therion Book
+% Copyright (C) 2003, 2004 Martin Budaj, Stacho Mudrak
+% Thanks to Wookey for corrections
+
+\ifx\pdfoutput\undefined
+  \input epsf
+  \gdef\outline#1{}
+  \def\pdfstartlink#1 #2 #3 #4 #5 #6 #7\pdfendlink{#7}
+  \let\red\relax \let\blue\relax \let\grey\relax 
+  \let\black\relax \let\green\relax \let\POPcolor\relax
+\else 
+  \pdfminorversion 5
+  \input etc/supp-mis 
+  \input etc/supp-pdf 
+  \pdfinfo{/Title (The TherionBook)
+           /Author (Martin Budaj, Stacho Mudrák)
+	   /Subject (Therion documentation)
+	   /Keywords (caves, surveying, cartography, computers)
+	   /Creator (TeX)
+  }
+  \pdfcatalog{/ViewerPreferences << /DisplayDocTitle true >> }
+  \gdef\outline#1{\pdfoutline goto page \the\pageno {/XYZ} {#1}}
+
+  \ifnum\pdftexversion<140
+    \let\red\relax \let\blue\relax \let\grey\relax 
+    \let\black\relax \let\green\relax \let\POPcolor\relax
+  \else
+    \chardef\Color=\pdfcolorstackinit page direct{0 g}
+    \def\red{\pdfcolorstack\Color push{0 0.89 0.94 0.28 k}}
+    \def\blue{\pdfcolorstack\Color push{1 1 0 0 k}}
+    \def\grey{\pdfcolorstack\Color push{0 0 0 0.50 k}}
+    \def\green{\pdfcolorstack\Color push{0.91 0 0.88 0.12 k}}
+    \def\black{\pdfcolorstack\Color push{0 0 0 1 k}}
+    \def\POPcolor{\pdfcolorstack\Color pop}
+  \fi
+
+\fi
+
+\catcode`@=11
+\input etc/optarg
+\input etc/verbatim
+%\input etc/path.sty
+
+\font\rm=cmr12
+\font\it=cmti12
+\font\mit=cmmi10 at 12pt
+\font\bf=cmbx12
+\font\tt=cmtt12
+\font\tenrm=cmr10
+\font\sy=cmsy10 at 12pt
+\font\eightrm=cmr8
+\font\eightit=cmti8
+\font\eightmit=cmmi8
+\font\tenitbx=cmbxti10
+
+\textfont0=\rm
+\textfont1=\mit
+\textfont2=\sy
+
+
+\font\manfnt=logo10 at 12pt
+
+\font\chap=cmssdc10 at 16pt
+\font\subchap=cmssdc10 at 12pt
+
+\def\MP{{\manfnt META}\-{\manfnt POST}}    
+
+\footline={\hss\black\tenrm\folio\POPcolor\hss}
+
+\def\cvak{\ifdim\dimen0<6pt \dimen0=9pt \else \dimen0=3pt\fi}
+\def\bodky{\leaders\hbox to12pt{\kern\dimen0.\hss}\hfil}
+
+\def\chapter#1.{\outline{#1}
+	\skiplines2\centerline{\chap #1}
+	\nobreak   \write1{\string\cvak\string\penalty-50
+                    \string\Line{\string\pdfstartlink\space
+		    attr {/Border [0 0 0]} goto page \folio\space {/Fit}
+		    \string\bf\space #1\string\bodky\ \folio\string\pdfendlink}}%
+  \skiplines1}
+\def\subchapter#1.{%\global\advance\kapnum by1\pictnum=1\relax
+  \penalty-100\skiplines2\centerline{\subchap #1}\nobreak
+  \write1{\string\cvak\string\Line{\string\quad\string\pdfstartlink\space
+	    attr {/Border [0 0 0]} goto page \folio\space {/Fit}
+            #1\string\bodky\ \folio\string\pdfendlink}}\nobreak
+  %\skiplines1\nobreak
+}
+\def\subsubchapter#1.{%\global\advance\kapnum by1\pictnum=1\relax
+  \penalty-100\skiplines2\leftline{\subchap #1}\nobreak
+  \write1{\string\cvak\string\Line{\string\qquad\string\pdfstartlink\space 
+	    attr {/Border [0 0 0]} goto page \folio\space {/Fit}
+            #1\string\bodky\ \folio\string\pdfendlink}}\nobreak
+}
+\def\skiplines#1{\par\hbox{}\nobreak\vskip-\baselineskip
+                 \vskip#1\baselineskip}
+
+\let\,\thinspace
+\def\Nobreak{\let\brnobr\nobreak\nobreak}
+\def\eq{=}
+
+{\catcode`\*=13\catcode`\=13
+ \gdef\itemize{%
+   \par\nobreak\advance\leftskip1em%\parskip0pt
+   \let\brnobr\nobreak
+   \catcode`\*13\def*{\par\brnobr\leavevmode\let\brnobr\relax
+                      \llap{$\bullet$ }\ignorespaces}
+   \catcode`\=13\def={\ifmmode\eq\else\unskip\
+                      $\triangleright$ \ignorespaces\fi}
+   }
+}
+
+\catcode`\|=13
+\def|{\ifvmode\penalty-100\medskip\fi\blue\verbatim|}
+\def\setupverbatim % see D.E.K., p. 381
+    {\parskip=0pt %
+     \tt %
+     \spaceskip=0pt \xspaceskip=0pt % just in case...
+     \catcode`\^^I=\active %
+%     \catcode`\<=\active \catcode`\>=\active %
+%    \catcode`\,=\active \catcode`\'=\active %
+     \catcode`\`=\active %
+\catcode`\*=12
+\catcode`\"=12
+\catcode`\'=12
+     \def\par{\leavevmode\endgraf}% this causes that empty lines aren't 
+                                  % skipped
+     \obeylines \uncatcodespecials \obeyspaces %
+     }%
+\def\doverbatim#1{\def\next##1#1{##1\endgroup\POPcolor}\next}%
+
+
+\def\MPpic#1{%\par\penalty-200
+%  \midinsert
+  \ifx\pdfoutput\undefined
+    %\centerline{
+    \epsfbox{mp/#1}%}
+  \else
+    %\centerline{
+    \convertMPtoPDF{mp/#1}{1}{1}%}%
+  \fi
+%  \endinsert
+}
+
+\def\pic{\@getoptionalarg\@pic}
+\def\@pic#1{%
+  \ifx\pdfoutput\undefined[[PICTURE SKIPPED IN DVI OUTPUT]]\else
+  \pdfximage\ifx\@optionalarg\empty
+            \else width\@optionalarg \fi{pic/#1}\pdfrefximage\pdflastximage
+  \fi
+}
+
+\def\fitpic#1{
+  \ifx\pdfoutput\undefined[[PICTURE SKIPPED IN DVI OUTPUT]]\else
+  \medskip
+  \setbox0=\hbox{\pdfximage{#1}\pdfrefximage\pdflastximage}
+  \centerline{\pdfximage
+    \ifdim\wd0>\ht0 width \else height \fi 10cm{#1}\pdfrefximage\pdflastximage}
+  \medskip
+  \fi
+}
+
+\def\mapsymbol#1{%
+  \ifx\pdfoutput\undefined
+    \hbox{\epsfbox{sym/symlib.#1}}%
+  \else
+    \convertMPtoPDF{sym/symlib.#1}{1}{1}%
+  \fi
+}
+
+%\def\future#1{%
+%[This chapter will be finished hopefully in the near future. Please read a 
+%chapter {\it Syntax summary (#1)} in the {\it Appendix}.]}
+
+\def\list{\penalty50\bgroup\itemize}
+\def\endlist{\par\egroup\penalty-50}
+
+\def\syntax{\par{\it Syntax:} }
+\def\endsyntax{}
+
+\def\context{\par{\it Context:} }
+\def\endcontext{}
+
+\def\description{\par{\it Description:} }
+\def\enddescription{}
+
+\def\arguments{\penalty-40\par{\it Arguments:}\bgroup\nobreak\itemize}
+\def\endarguments{\par\egroup}
+
+\def\options{\penalty-40\par{\it Options:}\bgroup\nobreak\itemize}
+\def\endoptions{\par\egroup}
+
+\def\comopt{\penalty-40\par{\it Command-like options:}\bgroup\nobreak\itemize}
+\def\endcomopt{\par\egroup}
+
+\def\example{\penalty-40\par{\it Example:} }
+\def\endexample{}
+
+\def\notes{\par{\it Special notes:} }
+\def\endnotes{}
+
+\def\www{\@getoptionalarg\@www}
+\def\@www#1{\ifx\pdfoutput\undefined
+    \ifx\@optionalarg\empty{\tt#1}\else\@optionalarg\fi
+  \else
+    \pdfstartlink attr {/Border [0 0 0]} user{%
+        /Subtype /Link
+        /A << 
+            /Type /Action 
+            /S /URI 
+            /URI (#1) 
+        >>}%
+    \green\ifx\@optionalarg\empty{\tt#1}\else\@optionalarg\fi\POPcolor
+    \pdfendlink
+  \fi}
+
+    
+\newcount\footnum \footnum 0    
+\long\def\[#1]{\unskip\global\advance\footnum by 1\footnote{$^{\the\footnum}$}{#1}}
+
+\def\tenpoint{\def\rm{\fam0\tenrm}%
+  \textfont0=\tenrm \scriptfont0=\sevenrm \scriptscriptfont0=\sevenrm
+  \textfont1=\tenit %\scriptfont1=\sevenit \scriptscriptfont1=\sevenit
+  \def\it{\fam\itfam\tenit}%
+  \textfont\itfam=\tenit
+  \def\bf{\fam\bffam\tenbf}%
+  \textfont\bffam=\tenbf \scriptfont\bffam=\sevenbf
+  \scriptscriptfont\bffam=\sevenbf
+  \def\tt{\fam\ttfam\tentt}%
+  \normalbaselineskip=12pt
+  \setbox\strutbox=\hbox{\vrule height9.5pt depth4.5pt width0pt}%
+  \normalbaselines\rm}
+
+\catcode`@=11
+\def\vfootnote#1{\insert\footins\bgroup\tenpoint
+  \interlinepenalty\interfootnotelinepenalty
+  \splittopskip\ht\strutbox % top baseline for broken footnotes
+  \splitmaxdepth\dp\strutbox \floatingpenalty\@MM
+  \leftskip=18pt \rightskip\z@skip \spaceskip\z@skip \xspaceskip\z@skip
+  \indent\black\llap{#1\thinspace}\ignorespaces
+  \footstrut\futurelet\next\fo@t}
+\count\footins=1000 % footnote magnification factor (1 to 1)
+\def\@foot{\POPcolor\strut\egroup}
+
+\catcode`@=12 % at signs are no longer letters
+
+
+
+\parskip=\medskipamount
+\parindent=0pt
+\baselineskip=16pt
+\raggedbottom
+\widowpenalty10000
+\clubpenalty10000
+\hsize=159.2mm
+\vsize=239.2mm
+
+\language0
+\rm
+
+\input ch00
+\input ch01
+\input ch02
+\input ch03
+\input ch04
+\input ch05
+\input ch06
+\input ch07
+
+\end

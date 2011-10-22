@@ -1,0 +1,13 @@
+encoding  utf-8
+#!PROCESS
+#!FILE 4.1
+#!
+#!IMAGE map3.pdf
+#!
+
+source cave3.th
+input thconfig.layout
+#export map -proj extended -o cave3.xvi
+export map -proj extended -o map3.pdf -layout l -layout-scale 1 500
+
+#!CLEAN map3.pdf

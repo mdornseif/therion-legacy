@@ -1,0 +1,24 @@
+encoding  utf-8
+#!PROCESS
+#!FILE 6
+#!SUBTITLE Stations in extended elevation scraps
+#! 
+#! Even if the station 1 is present more then one time in the map, 
+#! therion automatically
+#! detects correct position of this station in each scrap and they are
+#! usually drawn correctly.
+
+#!IMAGE map4.pdf
+
+source cave3.th
+source cave3.th2
+source
+centerline
+  extend hide 5 5'
+endcenterline
+endsource
+
+input thconfig.layout
+export map -proj extended -o map4.pdf -layout l -layout-scale 1 500
+
+#!CLEAN map4.pdf
