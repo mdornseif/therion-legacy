@@ -36,15 +36,15 @@ CMNOBJECTS = thdate.o extern/shpopen.o extern/dbfopen.o \
 
 
 # PLATFORM DEBIAN
-##CXX = c++
-##CC = gcc
-##POBJECTS =
-##LOCHEXE = loch/loch
-##CXXPFLAGS = -DTHLINUX
-##CCPFLAGS = -DTHLINUX
-##LDPFLAGS = -s
-##THPLATFORM = LINUX
-##THXTHMKCMD = ./therion
+CXX = c++
+CC = gcc
+POBJECTS =
+LOCHEXE = loch/loch
+CXXPFLAGS = -DTHLINUX
+CCPFLAGS = -DTHLINUX
+LDPFLAGS = -s
+THPLATFORM = LINUX
+THXTHMKCMD = ./therion
 
 
 # PLATFORM WIN32
@@ -59,15 +59,15 @@ CMNOBJECTS = thdate.o extern/shpopen.o extern/dbfopen.o \
 ##THXTHMKCMD = therion
 
 # PLATFORM MACOSX
-CXX = c++
-CC = cc
-LOCHEXE =
-POBJECTS = extern/getopt.o extern/getopt1.o
-CXXPFLAGS = -DTHMACOSX
-CCPFLAGS = -DTHMACOSX
-LDPFLAGS =
-THPLATFORM = MACOSX
-THXTHMKCMD = ./therion
+##CXX = c++
+##CC = cc
+##LOCHEXE =
+##POBJECTS = extern/getopt.o extern/getopt1.o
+##CXXPFLAGS = -DTHMACOSX
+##CCPFLAGS = -DTHMACOSX
+##LDPFLAGS =
+##THPLATFORM = MACOSX
+##THXTHMKCMD = ./therion
 
 # PLATFORM ENDCONFIG
 

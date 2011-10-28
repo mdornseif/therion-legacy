@@ -29,15 +29,15 @@ STRIPFLAG = -s
 ##LXPLATFORM = LINUX
 
 # PLATFORM DEBIAN
-##CXX = c++
-##CC = gcc
-##POBJECTS = lxR2P.o
-##VTKLIBS = -lvtkHybrid -lvtkImaging -lvtkIO -lvtkGraphics -lvtkFiltering -lvtkCommon -lfreetype
-##CXXPFLAGS = -DLXLINUX $(shell wx-config --cxxflags) -Wno-deprecated $(shell freetype-config --cflags) -I$(VTKPATH)
-##CCPFLAGS = -DLXLINUX  $(shell wx-config --cflags)
-##LXLIBDIR = linux
-##PLIBS = $(shell wx-config --libs --gl-libs) -L$(VTKLIBPATH) $(VTKLIBS) -lGLU -lpthread -lz 
-##LXPLATFORM = LINUX
+CXX = c++
+CC = gcc
+POBJECTS = lxR2P.o
+VTKLIBS = -lvtkHybrid -lvtkImaging -lvtkIO -lvtkGraphics -lvtkFiltering -lvtkCommon -lfreetype
+CXXPFLAGS = -DLXLINUX $(shell wx-config --cxxflags) -Wno-deprecated $(shell freetype-config --cflags) -I$(VTKPATH)
+CCPFLAGS = -DLXLINUX  $(shell wx-config --cflags)
+LXLIBDIR = linux
+PLIBS = $(shell wx-config --libs --gl-libs) -L$(VTKLIBPATH) $(VTKLIBS) -lGLU -lpthread -lz 
+LXPLATFORM = LINUX
 
 # PLATFORM WIN32
 ##CXX = c++
@@ -52,15 +52,15 @@ STRIPFLAG = -s
 
 
 # PLATFORM MACOSX
-CXX = c++
-CC = cc
-POBJECTS = 
-CXXPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cxxflags) -I$(VTKPATH) -Wno-deprecated -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
-CCPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cflags) -I/usr/X11R6/include
-LXLIBDIR = 
-PLIBS = -lz -L/usr/X11R6/lib $(shell wx-config --static --libs --gl-libs) -L$(VTKLIBPATH) $(VTKLIBS)
-POSTMAKE = cp -f ./loch ./loch.app/Contents/MacOS
-STRIPFLAG =
+##CXX = c++
+##CC = cc
+##POBJECTS = 
+##CXXPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cxxflags) -I$(VTKPATH) -Wno-deprecated -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
+##CCPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cflags) -I/usr/X11R6/include
+##LXLIBDIR = 
+##PLIBS = -lz -L/usr/X11R6/lib $(shell wx-config --static --libs --gl-libs) -L$(VTKLIBPATH) $(VTKLIBS)
+##POSTMAKE = cp -f ./loch ./loch.app/Contents/MacOS
+##STRIPFLAG =
 
 # PLATFORM ENDCONFIG
 
