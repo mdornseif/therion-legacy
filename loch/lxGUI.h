@@ -220,6 +220,7 @@ class lxFrame: public wxFrame
 
     void ToggleSurfaceTexture();
     void ToggleSurfaceTransparency();
+    void ToggleSurfaceLighting();
 
     void ToggleWallsTransparency();
 
@@ -238,7 +239,7 @@ class lxFrame: public wxFrame
 
 
 
-class lxApp: public wxApp
+class lxApp: public wxGLApp
 {
 
   public:

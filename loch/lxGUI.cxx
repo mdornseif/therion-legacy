@@ -926,8 +926,15 @@ lxFrameFastToggle(ColorsApplyWalls, m_colormd_app_walls)
 
 lxFrameToggle(WallsTransparency, m_walls_transparency)
 
-lxFrameToggle(SurfaceTexture, m_srf_texture)
+lxFrameToggle(SurfaceLighting, m_srf_lighting)
 lxFrameToggle(SurfaceTransparency, m_srf_transparency)
+
+void lxFrame::ToggleSurfaceTexture() { 
+  this->setup->m_srf_texture = !this->setup->m_srf_texture;
+  this->setup->m_srf_lighting = !this->setup->m_srf_texture;
+  this->canvas->UpdateContents();
+  this->UpdateM2TB(); 
+}
 
 
 void lxFrame::ToggleStereo() {
@@ -1106,6 +1113,22 @@ bool lxApp::OnInit()
 #endif
 
     wxFileSystem::AddHandler(new wxZipFSHandler);
+    // Use a double-buffered visual if available, as it will give much smoother
+    // animation.
+    bool double_buffered = true;
+    int wx_gl_attribs[] = { WX_GL_RGBA, WX_GL_DOUBLEBUFFER, 0 };
+    if (!InitGLVisual(wx_gl_attribs)) {
+	int wx_gl_attribs_no_db[] = { WX_GL_RGBA, 0 };
+	if (!InitGLVisual(wx_gl_attribs_no_db)) {
+	    wxString m;
+	    m.Printf(_T("This version of loch requires OpenGL to work, but it isn't available"));
+	    wxMessageBox(m,_T("Loch") , wxOK | wxCENTRE | wxICON_EXCLAMATION);
+	    exit(1);
+	}
+	double_buffered = false;
+    }
+
+
 
 #if wxUSE_DISPLAY
     this->frame = new lxFrame(this, _T("Loch"),
@@ -1153,13 +1176,26 @@ void lxFrame::ExportRotationPictures() {
   lxRenderData * tmpRD = new lxRenderData();
   tmpRD->m_imgFileType = 1;
   tmpRD->m_askFName = false;
-  this->canvas->setup->cam_orig_dir = 0.0;
-	this->canvas->setup->RotateCameraF(0.0);
+  this->canvas->setup->cam_orig_dir = this->canvas->setup->cam_dir;
+  this->canvas->setup->cam_orig_dist = this->canvas->setup->cam_dist;
+  this->canvas->setup->cam_orig_tilt = this->canvas->setup->cam_tilt;
+  this->canvas->setup->cam_orig_center = this->canvas->setup->cam_center;
+  this->canvas->setup->cam_orig_pos = this->canvas->setup->cam_pos;
   for(i = 0; i < 600; i++) {
-    this->canvas->ForceRefresh();
-    tmpRD->m_imgFileName = wxString::Format(_T("ROT%04d.png"), i);
+    tmpRD->m_imgFileName = this->m_fileDir;
+	tmpRD->m_imgFileName += _T("/");
+	tmpRD->m_imgFileName += wxString::Format(_T("ROT%04d.png"), i);
     tmpRD->Render(this, this->canvas);
+	this->canvas->SwapBuffers();
+	if (i == 0) {
+		tmpRD->Render(this, this->canvas);
+		this->canvas->SwapBuffers();
+		tmpRD->Render(this, this->canvas);
+		this->canvas->SwapBuffers();
+	}
+	if (i < 599) {
 		this->canvas->setup->RotateCameraF(0.6);
+	}
   }
   delete tmpRD;
 }

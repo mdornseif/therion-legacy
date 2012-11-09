@@ -205,7 +205,7 @@ static const thstok thtt_symbol_special[] = {
             break; \
           }
 
-int thsymbolset__get_id(char * symclass, char * symbol)
+int thsymbolset__get_id(const char * symclass, const char * symbol)
 {
   int type, subtype, rv;
   char types[128], 
@@ -871,11 +871,6 @@ void thsymbolset::export_pdf(class thlayout * layout, FILE * mpf, unsigned & sfi
 
   legend_hpoint(SYMP_ENTRANCE,thT("point entrance",layout->lang));
 
-  insfig(SYML_ARROW,thT("line arrow",layout->lang));
-  this->export_mp_symbol_options(mpf, SYML_ARROW);
-  fprintf(mpf,"%s(((0.2,0.8) -- (0.8,0.2)) inscale,2)",thsymbolset__mp[SYML_ARROW]);
-  endfig;
-
   insfig(SYML_MAPCONNECTION,thT("line map-connection",layout->lang));
   this->export_mp_symbol_options(mpf, SYML_MAPCONNECTION);
   fprintf(mpf,"%s(((0.2,0.8) -- (0.8,0.2)) inscale)",thsymbolset__mp[SYML_MAPCONNECTION]);
@@ -1153,7 +1148,10 @@ void thsymbolset::export_pdf(class thlayout * layout, FILE * mpf, unsigned & sfi
   legend_area(SYMA_CLAY,thT("area clay",layout->lang));  
   legend_area(SYMA_PEBBLES,thT("area pebbles",layout->lang));  
   legend_area(SYMA_DEBRIS,thT("area debris",layout->lang));  
+  legend_area(SYMA_FLOWSTONE,thT("area flowstone",layout->lang));  
+  legend_area(SYMA_MOONMILK,thT("area moonmilk",layout->lang));  
   legend_nocliparea(SYMA_BLOCKS,thT("area blocks",layout->lang));  
+  legend_nocliparea(SYMA_BEDROCK,thT("area bedrock",layout->lang));  
   
   // vodne toky (ciary, body)
 #define legend_waterflow(mid,txt) \
@@ -1287,26 +1285,36 @@ void thsymbolset::export_pdf(class thlayout * layout, FILE * mpf, unsigned & sfi
   if (layout->db != NULL) {
     for(it = layout->db->db2d.m_udef_map.begin(); it != layout->db->db2d.m_udef_map.end(); it++) {
       if (it->second->m_assigned && (it->second->m_used || (layout->legend == TT_LAYOUT_LEGEND_ALL))) {
-        insfig(0,thsymbolset__mp[0]);
         switch (it->first.m_command) {
           case TT_POINT_CMD:
-            fprintf(mpf,"p_u_%s_legend;\n",it->first.m_type);
             udef_desc = "point";
             break;
           case TT_LINE_CMD:
-            fprintf(mpf,"l_u_%s_legend;\n",it->first.m_type);
             udef_desc = "line";
             break;
           case TT_AREA_CMD:
-            fprintf(mpf,"a_u_%s_legend;\n",it->first.m_type);
             udef_desc = "area";
             break;
         }
         udef_desc += " u:";
         udef_desc += it->first.m_type;
-        LEGENDITEM->descr = thT(udef_desc.c_str(), layout->lang);
-        LEGENDITEM->idsym = (unsigned) mid++;
-        endfig;
+        if (strlen(thT(udef_desc.c_str(), layout->lang)) > 0) {
+          insfig(0,thsymbolset__mp[0]);
+          switch (it->first.m_command) {
+            case TT_POINT_CMD:
+              fprintf(mpf,"p_u_%s_legend;\n",it->first.m_type);
+              break;
+            case TT_LINE_CMD:
+              fprintf(mpf,"l_u_%s_legend;\n",it->first.m_type);
+              break;
+            case TT_AREA_CMD:
+              fprintf(mpf,"a_u_%s_legend;\n",it->first.m_type);
+              break;
+          }
+          LEGENDITEM->descr = thT(udef_desc.c_str(), layout->lang);
+          LEGENDITEM->idsym = (unsigned) mid++;
+          endfig;
+        }
       }
     }
   }

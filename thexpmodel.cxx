@@ -122,6 +122,19 @@ void thexpmodel::dump_header(FILE * xf)
 }
 
 
+bool thexpmodel::is_leg_exported(thdb1dl * l)
+{
+  if (!l->survey->is_selected()) return false;
+  if (((this->items & TT_EXPMODEL_ITEM_SPLAYSHOTS) == 0) && ((l->leg->flags & TT_LEGFLAG_SPLAY) != 0))
+    return false;
+  if (((this->items & TT_EXPMODEL_ITEM_SURFACECENTERLINE) == 0) && ((l->leg->flags & TT_LEGFLAG_SURFACE) != 0))
+    return false;
+  if (((this->items & TT_EXPMODEL_ITEM_CAVECENTERLINE) == 0) && (!((l->leg->flags & TT_LEGFLAG_SURFACE) != 0)))
+    return false;
+  return true;
+}
+
+
 void thexpmodel::dump_body(FILE * xf)
 {
   thexport::dump_body(xf);
@@ -211,7 +224,7 @@ void thexpmodel::export_3d_file(class thdatabase * dbp)
   unsigned long last_st = nstat, cur_st;
   int * s_exp = new int [nstat], * cis_exp, leg_flag, x_exp;
   cis_exp = s_exp; 
-  bool is_surface, is_duplicate;
+  bool is_surface, is_duplicate, is_splay;
   for(i = 0; i < nstat; i++, *cis_exp = 0, cis_exp++);
   for(i = 0; i < nlegs; i++, tlegs++) {
     if ((*tlegs)->survey->is_selected()) {
@@ -219,6 +232,15 @@ void thexpmodel::export_3d_file(class thdatabase * dbp)
       cur_st = dbp->db1d.station_vec[((*tlegs)->reverse ? (*tlegs)->leg->to.id : (*tlegs)->leg->from.id) - 1].uid - 1;
       is_surface = (((*tlegs)->leg->flags & TT_LEGFLAG_SURFACE) != 0);
       is_duplicate = (((*tlegs)->leg->flags & TT_LEGFLAG_DUPLICATE) != 0);
+      is_splay = (((*tlegs)->leg->flags & TT_LEGFLAG_SPLAY) != 0);
+
+      if (((this->items & TT_EXPMODEL_ITEM_SPLAYSHOTS) == 0) && is_splay)
+        continue;
+      if (((this->items & TT_EXPMODEL_ITEM_SURFACECENTERLINE) == 0) && is_surface)
+        continue;
+      if (((this->items & TT_EXPMODEL_ITEM_CAVECENTERLINE) == 0) && (!is_surface))
+        continue;
+
       if (is_surface)
         s_exp[cur_st] |= img_SFLAG_SURFACE;
       else
@@ -238,7 +260,9 @@ void thexpmodel::export_3d_file(class thdatabase * dbp)
         leg_flag |= img_FLAG_SURFACE;
       if (is_duplicate)
         leg_flag |= img_FLAG_DUPLICATE;
-      
+      if (is_splay)
+        leg_flag |= img_FLAG_SPLAY;
+
       img_write_item(pimg, img_LINE, leg_flag, (*tlegs)->survey->get_reverse_full_name(),
           dbp->db1d.station_vec[last_st].x, dbp->db1d.station_vec[last_st].y, dbp->db1d.station_vec[last_st].z);
       //thprintf("line to %d\n",last_st);
@@ -411,7 +435,7 @@ station_name[8] = 0
   thtext_inline = false;
 #endif
 }
-  
+
 void thexpmodel::export_thm_file(class thdatabase * dbp)
 {
 
@@ -1734,7 +1758,7 @@ void thexpmodel::export_kml_file(class thdatabase * dbp)
 
   numst = 0;
   for(i = 0; i < nlegs; i++, tlegs++) {
-    if ((*tlegs)->survey->is_selected() && (((*tlegs)->leg->flags & TT_LEGFLAG_SURFACE) == 0)) {
+    if (this->is_leg_exported(*tlegs) && (((*tlegs)->leg->flags & TT_LEGFLAG_SURFACE) == 0)) {
       cur_st = dbp->db1d.station_vec[((*tlegs)->reverse ? (*tlegs)->leg->to.id : (*tlegs)->leg->from.id) - 1].uid - 1;
       if (cur_st != last_st) {
         if (numst > 0)
@@ -1743,14 +1767,14 @@ void thexpmodel::export_kml_file(class thdatabase * dbp)
         thcs2cs(thcs_get_data(thcfg.outcs)->params, thcs_get_data(TTCS_LONG_LAT)->params, 
           dbp->db1d.station_vec[cur_st].x, dbp->db1d.station_vec[cur_st].y, dbp->db1d.station_vec[cur_st].z,
           x, y, z);
-        fprintf(out, "\t%20.14f,%20.14f,%20.14f\n", x / THPI * 180.0, y / THPI * 180.0, z);
+        fprintf(out, "\t%.14f,%.14f,%.14f\n", x / THPI * 180.0, y / THPI * 180.0, z);
         numst = 1;
       }
       last_st = dbp->db1d.station_vec[((*tlegs)->reverse ? (*tlegs)->leg->from.id : (*tlegs)->leg->to.id) - 1].uid - 1;
       thcs2cs(thcs_get_data(thcfg.outcs)->params, thcs_get_data(TTCS_LONG_LAT)->params, 
         dbp->db1d.station_vec[last_st].x, dbp->db1d.station_vec[last_st].y, dbp->db1d.station_vec[last_st].z,
         x, y, z);
-      fprintf(out, "\t%20.14f,%20.14f,%20.14f\n", x / THPI * 180.0, y / THPI * 180.0, z);
+      fprintf(out, "\t%.14f,%.14f,%.14f\n", x / THPI * 180.0, y / THPI * 180.0, z);
       numst++;
     }
   }
