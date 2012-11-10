@@ -1,9 +1,11 @@
+*.a
 *.o
 *~
-*.a
 loch/loch
+loch/loch.app/Contents/MacOS
 loch/loch.app/Contents/Resources/loch.icns
-therion
-xtherion/xtherion
 thbook/etc/contents.tex
 thbook/thbook.pdf
+therion
+therion.log
+xtherion/xtherion
