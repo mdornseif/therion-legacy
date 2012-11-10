@@ -52,13 +52,13 @@ LXPLATFORM = LINUX
 
 
 # PLATFORM MACOSX
-##CXX = c++
+##CXX = g++
 ##CC = cc
 ##POBJECTS = getline.o
-##CXXPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cxxflags) -I$(VTKPATH) -Wno-deprecated -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
-##CCPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --static --cflags) -I/usr/X11R6/include
+##CXXPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --cxxflags) -I$(VTKPATH) -Wno-deprecated -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
+##CCPFLAGS = -W -Wall -DLXMACOSX $(shell wx-config --cflags) -I/usr/X11R6/include
 ##LXLIBDIR = 
-##PLIBS = -lz -L/usr/X11R6/lib $(shell wx-config --static --libs --gl-libs) -L$(VTKLIBPATH) $(VTKLIBS)
+##PLIBS = -lz -L/usr/X11R6/lib $(shell wx-config --libs --gl-libs) -L$(VTKLIBPATH) $(VTKLIBS)
 ##POSTMAKE = cp -f ./loch ./loch.app/Contents/MacOS
 ##STRIPFLAG =
 

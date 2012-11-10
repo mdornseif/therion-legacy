@@ -48,7 +48,7 @@ getline (lineptr, n, stream)
 # define NDEBUG
 # include <assert.h>
 
-# if STDC_HEADERS
+# if STDC_HEADERS || __APPLE__
 #  include <stdlib.h>
 # else
 char *malloc (), *realloc ();
@@ -137,6 +137,7 @@ getstr (lineptr, n, stream, terminator, offset)
   return ret;
 }
 
+#ifndef __APPLE__
 int
 getline (lineptr, n, stream)
      char **lineptr;
@@ -155,4 +156,5 @@ getdelim (lineptr, n, delimiter, stream)
 {
   return getstr (lineptr, n, stream, delimiter, 0);
 }
+#endif
 #endif
