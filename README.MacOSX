@@ -1,0 +1,22 @@
+These Installation instructions where tested on a clean install of
+MAcOS X 10.8.2
+
+Therion & XTherion
+------------------
+* Install Xcode from the App Store
+* Open Xcode, open Preferences, go to Downloads, Download "Command Line Tools"
+* Download and install MaxTeX.pkg from http://www.tug.org/mactex/
+* type `make config-macosx; make`
+* you should now be able to run `./therion` and `./xtherion/xtherion`
+
+Loch Viewer
+-----------
+(Tested with wxmac-2.9.4.0 & vtk-5.10)
+* Install homebrew from http://mxcl.github.com/homebrew/
+* brew install vtk
+* brew install wxmac
+* Download and install XQuarz from http://xquartz.macosforge.org/ (for the default GL headers)
+* type `make lock/loch`
+* you should now be able to run `./loch/loch`
+
+
