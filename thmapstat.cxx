@@ -470,7 +470,7 @@ void thmapstat::export_pdftex(FILE * f, class thlayout * layout, legenddata * ld
   ldata->copyrights = "";
   if ((this->copyright.size() > 0) && (layout->max_copys != 0)) {
     cnt = this->copyright.size();
-    fprintf(f,"\\copyrights={%s",utf2tex("(c) "));
+    fprintf(f,"\\copyrights={%s", "\\copyright\\ ");
     ldata->copyrights = "(c) ";
     i = 0;
     for (ci = this->copyright.begin();
